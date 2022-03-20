@@ -20,10 +20,9 @@ router.post('/allphanuser', async (req, res, next) => {
 
             let transporter = nodemailer.createTransport({
                 service: 'gmail',
-<<<<<<< HEAD
-=======
+
                 host: 'Allphanes',
->>>>>>> 8eb294abadbd0d01fa64f5e294395d43115218fa
+
                 port: 587,
                 auth: {
                     user: 'boton.cob2@gmail.com',
