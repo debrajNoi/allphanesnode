@@ -87,7 +87,7 @@ router.post('/allphanuser', async (req, res, next) => {
             })
 
             let info = await transporter.sendMail({
-                from: 'noreply@<allphanes@gmail.com>',
+                from: 'boton.cob2@gmail.com',
                 to: Email,
                 subject: "Allphanes OTP",
                 html: "<b>Otp for account varification is :</b><h3 style='font-weight:bold; margin-left: 10px;'>" + randotp + "</h3>", // html body
