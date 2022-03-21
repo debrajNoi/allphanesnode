@@ -158,6 +158,17 @@ router.get("/allphanuserprofileget",async(req,res)=>{
     }
 })
 
+router.get("/allphanuserdelete/:id",async(req,res)=>{
+    try{
+       const item=await Allphanesusermodel.findByIdAndDelete(req.params.id).then(item=>{
+           if(!item)return res.json({ack:"0", status:400, message:"Allphanesuser Not delete"});
+           return res.json({ack:"1", status:200, message:"Allphanesuser data delete successfully"});
+       })
+    }catch(err){
+        res.json({ack:0, status:500, message:"server error",error:err});
+    }
+})
+
 router.post("/login", async (req, res) => {
     try {
         const email = req.body.Email
