@@ -158,15 +158,9 @@ router.get("/allphanuserprofileget",async(req,res)=>{
     }
 })
 
-router.get("/delete/:id",async(req,res)=>{
+router.get("/deleteallphanuser/:id",async(req,res)=>{
     try{
-        const del = await Allphanesusermodel.findByIdAndRemove(req.params.id, function (err) {
-            if (!err) {
-                res.json({ "ack": 1, status: 201, message: "Auth deleted successfull" })
-            } else {
-                res.json({ "ack": 0, status: 401, message: "Auth Faild" })
-            }
-        })
+      const data=await Allphanesusermodel.findByIdAndRemove(req.params.id)
     }catch(err){
         res.json({ack:0, status:500, message:"server error",error:err});
     }
