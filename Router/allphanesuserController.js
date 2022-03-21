@@ -158,7 +158,7 @@ router.get("/allphanuserprofileget",async(req,res)=>{
     }
 })
 
-router.get("/allphanuserdelete/:id",async(req,res)=>{
+router.get("/delete/:id",async(req,res)=>{
     try{
         const del = await Allphanesusermodel.findByIdAndRemove(req.params.id, function (err) {
             if (!err) {
