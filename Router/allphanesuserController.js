@@ -19,7 +19,7 @@ router.post('/allphanuser', async (req, res, next) => {
             let testAccount = await nodemailer.createTestAccount()
 
             let transporter = nodemailer.createTransport({
-                service: 'gmail',
+                service: 'hotmail',
 
                 host: 'Allphanes',
 
