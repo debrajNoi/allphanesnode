@@ -1,6 +1,10 @@
-const mongoose= require('mongoose');
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const allphanuserpostSchema=new mongoose.Schema({
+const allphanuserpostSchema=Schema({
+    // _id: Schema.Types.ObjectId,
+    // _id: Schema.Types.ObjectId,
+    stories: [{ type: Schema.Types.ObjectId, ref: 'Allphanuserimagegellary' }],
     RefrenceUId:{
         type:String,
         required:true

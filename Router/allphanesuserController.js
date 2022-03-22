@@ -19,7 +19,7 @@ router.post('/allphanuser', async (req, res, next) => {
             let testAccount = await nodemailer.createTestAccount()
 
             let transporter = nodemailer.createTransport({
-                service: 'hotmail',
+                service: 'gmail',
 
                 host: 'Allphanes',
 
@@ -268,6 +268,20 @@ router.get('/allphanesuserget',async(req,res)=>{
        res.json({ack:"0", status:500, message:"server error",error:err})
     }
 })
+
+
+const checkUnique = async (req, res, next)=>{
+    console.log(req.body)
+    await Allphanesusermodel.findOne(req.body)
+    .then(user =>{
+        if(user) return res.json({ ack: "0", status: 401, message: Object.keys(req.body) + " already Exist" })
+        return res.json({ ack: "0", status: 200, message: req.body })
+    })
+    .catch(err =>{
+        console.log(err)
+    })
+}
+router.post('/checkunique', checkUnique)
 
 
 module.exports = router

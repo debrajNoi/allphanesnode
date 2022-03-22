@@ -9,6 +9,7 @@ router.post('/allphanuserposttitle',async(req,res)=>{
     try{
         const randotp = globalfunction.randNum(6);
        const data=new Allphanuserpost({
+
         RefrenceUId:randotp,
         PostTitle:req.body.PostTitle,
         PostDescription:req.body.PostDescription,
@@ -18,16 +19,90 @@ router.post('/allphanuserposttitle',async(req,res)=>{
         ModifiedDateTime:Date.now(),
         CountViews:1
        })
-       await data.save().then(item=>{
+
+      const item= await data.save().then(item=>{
            if(!item)return res.json({ack:0, status:400, message:"Allphanuserpost inssert not successfully"});
            
-           return res.json({ack:1, status:200, message:"Allphanuserpost insert successFully"});
+           console.log(item);
+           return res.json({ack:1, status:200, message:"Allphanuserpost insert successFully",id:item._id});
            
        })
     }catch(err){
         res.json({ack:"0", status:500, message:"server error", error:err});
     }
 });
+
+
+router.post('/allphanestest',async(req,res)=>{
+    try{
+        const randotp = globalfunction.randNum(6);
+       const data=new Allphanuserpost({
+
+        RefrenceUId:randotp,
+        PostTitle:req.body.PostTitle,
+        PostDescription:req.body.PostDescription,
+        PostDateTime:Date.now(),
+        Isactive:true,
+        Istarsh:true,
+        ModifiedDateTime:Date.now(),
+        CountViews:1
+       })
+
+      const item= await data.save().then(item=>{
+           if(!item)return res.json({ack:0, status:400, message:"Allphanuserpost inssert not successfully"});
+           
+        //    console.log(item);
+        //    return res.json({ack:1, status:200, message:"Allphanuserpost insert successFully",id:item._id});
+
+
+        const randvale = (Date.now());
+        let imagepath = ""
+        if (req.files != null) {
+            if (req.files.PaostImagePath != null) {
+                req.files.PaostImagePath.mv("./gellary/image/" + randvale + '.jpg', function (err) {
+                    if (err) {
+                        res.json({ "ack": 0, status: 401, message: "phto upload fail" });
+                    }
+                })
+                imagepath = "gellary/image" + randvale + '.jpg';
+            }
+        }
+        
+        const allphanuserdata= Allphanuserpost.find().sort({_id:-1}).limit(1);
+        // console.log(allphanuserdata)
+         const refid=[];
+        
+        allphanuserdata.forEach(item=>{
+            // console.log('',item.id + item.createdAt);
+            const val=item.id;
+            // console.log(val);
+            refid.push(val);
+        });
+        const refarenid=refid[0];
+        
+//    console.log(new mongoose.Types.ObjectId());
+        const ite=new Allphanuserimagegellary({
+            RefPostId:refarenid,
+            PaostImagePath:imagepath,
+            IsActive:true,
+            IsTarsh:1,
+            Status:true
+        });
+        ite.save().then(ite=>{
+           if(!ite)return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"});
+           console.log(ite);
+           return res.json({ack:"1", status:200, message:"Allphanusergellary image upload"});
+       })
+
+           
+       })
+    }catch(err){
+        res.json({ack:"0", status:500, message:"server error", error:err});
+    }
+});
+
+
+
 
 router.post("/allphanuserimagegellary",async(req,res)=>{
     try{
@@ -44,7 +119,7 @@ router.post("/allphanuserimagegellary",async(req,res)=>{
             }
         }
         
-        const allphanuserdata=await Allphanuserpost.find({RefrenceUId:"006362"}).sort({_id:-1}).limit(1);
+        const allphanuserdata=await Allphanuserpost.find().sort({_id:-1}).limit(1);
         // console.log(allphanuserdata)
          const refid=[];
         
@@ -55,7 +130,8 @@ router.post("/allphanuserimagegellary",async(req,res)=>{
             refid.push(val);
         });
         const refarenid=refid[0];
-   
+        
+//    console.log(new mongoose.Types.ObjectId());
         const item=new Allphanuserimagegellary({
             RefPostId:refarenid,
             PaostImagePath:imagepath,
@@ -71,6 +147,36 @@ router.post("/allphanuserimagegellary",async(req,res)=>{
         res.json({ack:0, status:500, message:"server error",error:err});
     }
 });
+
+router.get("/allphanpostandgellaey",async(req,res)=>{
+    try{
+        const newpromise = new Promise(async (resolve, reject) => {
+            await Allphanuserpost.find()
+                .exec(function (err, data) {
+                    if (err) return res.json({ "ack": 0, status: 406, error: err });
+                    console.log(data);
+                    resolve({ first: data });
+                });
+
+
+        }).catch((err) => console.log(err))
+
+        newpromise.then(async (element) => {
+            await Allphanuserimagegellary.find()
+                .exec(function (err, data) {
+                    // console.log(data);
+                   
+                    if (err) return res.json({ "ack": 0, status: 406, error: err });
+                    res.json({ ...element, second: data })
+                });
+
+        })
+   
+
+    }catch(err){
+        res.json({ack:"0", status:500, message:"server error",error:err});
+    }
+})
 
 
 module.exports = router;

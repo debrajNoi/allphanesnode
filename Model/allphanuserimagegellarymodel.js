@@ -1,10 +1,12 @@
-const mongoose=require('mongoose');
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
+const { required } = require('nodemon/lib/config');
 
-const allphanuserimagegellaryScema=new mongoose.Schema({
+const allphanuserimagegellaryScema=Schema({
     RefPostId:{
         type:String,
         required:true
-    },
+    },    
     PaostImagePath:{
         type:String,
         required:true
