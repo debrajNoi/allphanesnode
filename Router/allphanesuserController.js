@@ -9,7 +9,8 @@ const bcrypt = require("bcrypt")
 const { genSalt } = require('bcrypt')
 const { route } = require('express/lib/router')
 const { updateOne, findOne } = require('../Model/allphanesusermodel')
-const { response } = require('express')
+const { response } = require('express');
+const Allphanuserpost=require("../Model/allphanuserpostmodel");
 
 router.post('/allphanuser', async (req, res, next) => {
     try {
@@ -148,7 +149,7 @@ router.post('/allphanuseredit/:id',async(req,res)=>{
 
 router.get("/allphanuserprofileget",async(req,res)=>{
     try{
-        const data = await Allphanesusermodel.find()
+        const data = await Allphanuserpost.find()
         const response = data ? 
             res.json({ack:"1", status:200, message:"request succesfull", data}) 
             : res.json({ack:"0", status:400, message:"No data found",error:err})

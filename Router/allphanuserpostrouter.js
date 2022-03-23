@@ -120,7 +120,7 @@ router.post("/allphanuserimagegellary",async(req,res)=>{
         }
         
         const allphanuserdata=await Allphanuserpost.find().sort({_id:-1}).limit(1);
-        // console.log(allphanuserdata)
+        console.log(allphanuserdata)
          const refid=[];
         
         allphanuserdata.forEach(item=>{
@@ -130,6 +130,7 @@ router.post("/allphanuserimagegellary",async(req,res)=>{
             refid.push(val);
         });
         const refarenid=refid[0];
+        
         
 //    console.log(new mongoose.Types.ObjectId());
         const item=new Allphanuserimagegellary({
@@ -178,5 +179,24 @@ router.get("/allphanpostandgellaey",async(req,res)=>{
     }
 })
 
+// router.get("/getdata",async(req,res)=>{
+//     try{
+//      const item=await Allphanuserpost.find();
+//     }catch(err){
+//         res.json({ack:"0", status:500, message:"server error",error:err});
+//     }
+// })
+
+router.get('/bl',async(req,res)=>{
+    try{
+        const data=await Allphanuserimagegellary.find()
+        const response = data ?
+            res.json({ack:1, status:1, message:"Allphanusers data get",view:data}):
+            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+        return response
+    }catch(err){
+       res.json({ack:"0", status:500, message:"server error",error:err})
+    }
+})
 
 module.exports = router;
