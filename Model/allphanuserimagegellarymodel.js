@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-// const { Schema } = mongoose;
+
 const { required } = require('nodemon/lib/config');
 
 const allphanuserimagegellaryScema=new mongoose.Schema({

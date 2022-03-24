@@ -97,6 +97,11 @@ const allphanesuserSchema = new mongoose.Schema({
     },
     userToken: {
         type: String
+    },
+    Token:{
+        type:String,
+        required:false,
+        default:""
     }
 }, {
     timestamps: true

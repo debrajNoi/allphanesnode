@@ -12,6 +12,7 @@ const app=express()
 app.use(cors())
 app.use(express.json())
 app.use(fileUpload())
+app.use("/imageuploads",express.static('upload'))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 

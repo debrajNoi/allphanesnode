@@ -77,7 +77,8 @@ router.post('/allphanuser', async (req, res, next) => {
                 profile_pic:imagepath,
                 cover_pic:imagepath,
                 commend_status:req.body.commend_status,
-                userToken:randToken
+                userToken:randToken,
+                Token:false
             })
 
 
@@ -178,11 +179,19 @@ router.post("/login", async (req, res) => {
         Allphanesusermodel.findOne({ Email: email }).then(user => {
             ///if user not exit
             if (!user) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
-            bcrypt.compare(Passwordx, user.Password, (err, data) => {
+          const item= bcrypt.compare(Passwordx, user.Password, (err, data) => {
                 if (err) throw err
                 //if both match than you can do anything
+               
                 const response = data ?
-                    res.json({ ack: "1", status: 200, message: "Login Successfully", token: user.userToken })
+                 
+                Allphanesusermodel.updateOne({Email: email},{$set: {Token:data}}).then(tok=>{
+
+                    if(!tok)return res.json({ack:"0", status:400, message:"Token not update"});
+
+                    return res.json({ ack: "1", status: 200, message: "Login Successfully", token: user.userToken })
+                })
+                    
                     : res.json({ ack: "0", status: 400, message: "invallid credential" })
                 return response
             })
