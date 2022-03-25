@@ -4,18 +4,20 @@ const Allphanuserpost=require("../Model/allphanuserpostmodel");
 const Allphanuserimagegellary=require("../Model/allphanuserimagegellarymodel");
 const multer=require("multer");
 const imagetest=require("../Model/imagetest");
+const Allphaneuser=require("../Model/allphanesusermodel");
+
+
+
 
 
 const router = express.Router()
-
-
 
 router.post('/allphanuserposttitle',async(req,res)=>{
     try{
         const randotp = globalfunction.randNum(6);
        const data=new Allphanuserpost({
 
-        RefrenceUId:randotp,
+        RefrenceUId:req.body.id,
         PostTitle:req.body.PostTitle,
         PostDescription:req.body.PostDescription,
         PostDateTime:Date.now(),
@@ -184,9 +186,12 @@ router.get("/allphanpostandgellaey",async(req,res)=>{
     }
 })
 
+
 router.get("/posts",async(req,res)=>{
     try{
-       const item=await Allphanuserpost.find().then(item=>{
+
+
+       const item=await Allphanuserpost.find().sort({createdAt:-1}).then(item=>{
         if(!item)return res.json({ack:0, message:"not get"});
         res.json({ack:"1", status:200, message:"Allphanuserpost data get successfully",view:item});
        })
@@ -206,5 +211,6 @@ router.get('/bl',async(req,res)=>{
        res.json({ack:"0", status:500, message:"server error",error:err})
     }
 })
+
 
 module.exports = router;

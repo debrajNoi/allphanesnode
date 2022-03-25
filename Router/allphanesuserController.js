@@ -189,7 +189,7 @@ router.post("/login", async (req, res) => {
 
                     if(!tok)return res.json({ack:"0", status:400, message:"Token not update"});
 
-                    return res.json({ ack: "1", status: 200, message: "Login Successfully", token: user.userToken })
+                    return res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id })
                 })
                     
                     : res.json({ ack: "0", status: 400, message: "invallid credential" })
