@@ -9,13 +9,12 @@ const PORT = process.env.PORT || 8080
 
 const app=express()
 
-// app.use(cors())
-// app.use(express.json())
-// app.use(fileUpload())
-// app.use("/imageuploads",express.static('upload'))
-app.use('/image',express.static('image'));
+app.use(cors())
+app.use(express.json())
+app.use(fileUpload())
+app.use("/imageuploads",express.static('upload'))
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({limit: '50mb', extended: false}))
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 
 const allphanesuserController=require("./Router/allphanesuserController")
 const allphanuserpostcontroller=require("./Router/allphanuserpostrouter")
