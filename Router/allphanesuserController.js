@@ -20,7 +20,7 @@ const API_KEY = "SG.LCmmM07TStiGsVCLTsU0CQ.aAz3hH_I74RCvM3DxpGAVH4n_xu8qa_RN9QWA
 router.post("/mailtest", async (req, res) => {
     try {
         console.log("hello");
-        sgMail.setApiKey(API_KEY)
+        sgMail.setApiKey (process.API_KEY)
         const message = {
             to: "boton.cob2@gmail.com",
             from: "boton.cob786@gmail.com",
