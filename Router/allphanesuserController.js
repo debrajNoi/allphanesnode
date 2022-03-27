@@ -45,14 +45,14 @@ router.post('/allphanuser', async (req, res, next) => {
             let testAccount = await nodemailer.createTestAccount()
 
             let transporter = nodemailer.createTransport({
-                service: 'gmail',
+                service: 'hotmail',
 
                 // host: 'Allphanes',
 
                 // port: 587,
                 auth: {
-                    user: 'boton.cob2@outlook.com',
-                    pass: '7031445611b',
+                    user: process.env.AUTH_EMAIL,
+                    pass: process.env.AUTH_PASSWORD,
                 },
             })
             const randval = (Date.now())
