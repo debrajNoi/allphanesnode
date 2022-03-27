@@ -51,8 +51,8 @@ router.post('/allphanuser', async (req, res, next) => {
 
                 // port: 587,
                 auth: {
-                    user: 'boton.cob2@gmail.com',
-                    pass: '7031445611',
+                    user: 'boton.cob2@outlook.com',
+                    pass: '7031445611b',
                 },
             })
             const randval = (Date.now())
