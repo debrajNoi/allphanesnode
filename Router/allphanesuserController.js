@@ -10,7 +10,7 @@ const { genSalt } = require('bcrypt')
 const { route } = require('express/lib/router')
 const { updateOne, findOne } = require('../Model/allphanesusermodel')
 const { response } = require('express');
-const Allphanuserpost=require("../Model/allphanuserpostmodel");
+const Allphanuserpost = require("../Model/allphanuserpostmodel");
 
 router.post('/allphanuser', async (req, res, next) => {
     try {
@@ -22,9 +22,9 @@ router.post('/allphanuser', async (req, res, next) => {
             let transporter = nodemailer.createTransport({
                 service: 'gmail',
 
-                host: 'Allphanes',
+                // host: 'Allphanes',
 
-                port: 587,
+                // port: 587,
                 auth: {
                     user: 'boton.cob2@gmail.com',
                     pass: '7031445611',
@@ -62,45 +62,86 @@ router.post('/allphanuser', async (req, res, next) => {
                 Password: secpassword,
                 otp: dbOtp,
                 otpExpTime: otpExp,
-                OtherPhoneNo:req.body.OtherPhoneNo,
-                Mostinterested:req.body.Mostinterested,
-                CreationDate:Date.now(),
-                LastLoginDateTime:Date.now(),
-                ModifiedDate:Date.now(),
-                IsCompletedRegistration:req.body.IsCompletedRegistration,
-                IsActive:req.body.IsActive,
-                CountryId:req.body.CountryId,
-                StateId:req.body.StateId,
-                CityId:req.body.CityId,
-                Isemailverified:req.body.Isemailverified,
-                DateOfBirth:req.body.DateOfBirth,
-                profile_pic:imagepath,
-                cover_pic:imagepath,
-                commend_status:req.body.commend_status,
-                userToken:randToken,
-                Token:false
+                OtherPhoneNo: req.body.OtherPhoneNo,
+                Mostinterested: req.body.Mostinterested,
+                CreationDate: Date.now(),
+                LastLoginDateTime: Date.now(),
+                ModifiedDate: Date.now(),
+                IsCompletedRegistration: req.body.IsCompletedRegistration,
+                IsActive: req.body.IsActive,
+                CountryId: req.body.CountryId,
+                StateId: req.body.StateId,
+                CityId: req.body.CityId,
+                Isemailverified: req.body.Isemailverified,
+                DateOfBirth: req.body.DateOfBirth,
+                profile_pic: imagepath,
+                cover_pic: imagepath,
+                commend_status: req.body.commend_status,
+                userToken: randToken,
+                Token: false
             })
 
+            console.log(item);
 
-            const a1 = await item.save( err => {
-                err ?
-                    res.json({ ack: "0", status: 401, message: "AllphaneUser data Not Insert" }):
-                    res.json({ ack: "1", status: 200, message: "AllphaneUser data  Insert SuccesFully", token : randToken,otp : randotp })
+
+            const a1 = await item.save(err => {
+                if (err) {
+                    res.json({ ack: "0", status: 401, message: "AllphaneUser data Not Insert" })
+                } else {
+
+
+                    let mailOptions = {
+                        from: 'boton.cob2@gmail.com',
+                        to: Email,
+                        subject: "Allphanes OTP",
+                        html: "<b>Otp for account varification is :</b><h3 style='font-weight:bold; margin-left: 10px;'>" + randotp + "</h3>" // html body
+                    }
+
+                    // })
+
+                    transporter.sendMail(mailOptions, function (error, info) {
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log('Email sent: ' + info.response);
+                        }
+                    });
+
+
+
+                    res.json({ ack: "1", status: 200, message: "AllphaneUser data  Insert SuccesFully", token: randToken, otp: randotp })
+                }
+
+
             })
 
-            let info = await transporter.sendMail({
-                from: 'boton.cob2@gmail.com',
-                to: Email,
-                subject: "Allphanes OTP",
-                html: "<b>Otp for account varification is :</b><h3 style='font-weight:bold; margin-left: 10px;'>" + randotp + "</h3>", // html body
-            })
+            // let mailOptions = await transporter.sendMail({
+            //     let mailOptions={
+            //         from: 'boton.cob2@gmail.com',
+            //     to: Email,
+            //     subject: "Allphanes OTP",
+            //     html: "<b>Otp for account varification is :</b><h3 style='font-weight:bold; margin-left: 10px;'>" + randotp + "</h3>" // html body
+            //     }
 
-            const mails = info.messageId ? res.send("email send") : res.send("error with sending fail")
-            
-            return mails
+            // // })
 
-            console.log("Message sent: %s", info.messageId)
-            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info))
+            // transporter.sendMail(mailOptions, function(error, info){
+            //     if (error) {
+            //       console.log(error);
+            //     } else {
+            //       console.log('Email sent: ' + info.response);
+            //     }
+            //   });
+
+
+
+
+            // const mails = info.messageId ? res.send("email send") : res.send("error with sending fail")
+
+            // return mails
+
+            // console.log("Message sent: %s", info.messageId)
+            // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info))
         }
         main().catch(console.error)
     } catch (err) {
@@ -109,8 +150,8 @@ router.post('/allphanuser', async (req, res, next) => {
 })
 
 
-router.post('/allphanuseredit/:id',async(req,res)=>{
-    try{
+router.post('/allphanuseredit/:id', async (req, res) => {
+    try {
         const randval = (Date.now())
         let profileimage = ""
         if (req.files != null) {
@@ -131,40 +172,40 @@ router.post('/allphanuseredit/:id',async(req,res)=>{
                 coverpath = "uploads/image" + randvale + '.jpg'
             }
         }
-        const dataEdit=await Allphanesusermodel.findByIdAndUpdate(req.params.id,{
-            CountryId:req.body.CountryId,
-            StateId:req.body.StateId,
-            CityId:req.body.CityId,
-            profile_pic:profileimage,
-            cover_pic:coverpath,
-            commend_status:req.body.commend_status
+        const dataEdit = await Allphanesusermodel.findByIdAndUpdate(req.params.id, {
+            CountryId: req.body.CountryId,
+            StateId: req.body.StateId,
+            CityId: req.body.CityId,
+            profile_pic: profileimage,
+            cover_pic: coverpath,
+            commend_status: req.body.commend_status
         })
-        await dataEdit.save().then(item=>{
-            if(!item)return res.json({message:"Allphanuser not update successfully"})
-            return res.json({ack:1, status:200, message:"Allphanuser update successFully"})
+        await dataEdit.save().then(item => {
+            if (!item) return res.json({ message: "Allphanuser not update successfully" })
+            return res.json({ ack: 1, status: 200, message: "Allphanuser update successFully" })
         })
-      }catch(err){
-        res.json({ack:0, status:500, message:"Server error",error:err})
+    } catch (err) {
+        res.json({ ack: 0, status: 500, message: "Server error", error: err })
     }
 })
 
-router.get("/allphanuserprofileget",async(req,res)=>{
-    try{
+router.get("/allphanuserprofileget", async (req, res) => {
+    try {
         const data = await Allphanesusermodel.find()
-        const response = data ? 
-            res.json({ack:"1", status:200, message:"request succesfull", data}) 
-            : res.json({ack:"0", status:400, message:"No data found",error:err})
+        const response = data ?
+            res.json({ ack: "1", status: 200, message: "request succesfull", data })
+            : res.json({ ack: "0", status: 400, message: "No data found", error: err })
         return response
-    }catch(err){
-        res.json({ack:"0", status:500, message:"server error",error:err})
+    } catch (err) {
+        res.json({ ack: "0", status: 500, message: "server error", error: err })
     }
 })
 
-router.get("/deleteallphanuser/:id",async(req,res)=>{
-    try{
-      const data=await Allphanesusermodel.findByIdAndRemove(req.params.id)
-    }catch(err){
-        res.json({ack:0, status:500, message:"server error",error:err});
+router.get("/deleteallphanuser/:id", async (req, res) => {
+    try {
+        const data = await Allphanesusermodel.findByIdAndRemove(req.params.id)
+    } catch (err) {
+        res.json({ ack: 0, status: 500, message: "server error", error: err });
     }
 })
 
@@ -179,19 +220,19 @@ router.post("/login", async (req, res) => {
         Allphanesusermodel.findOne({ Email: email }).then(user => {
             ///if user not exit
             if (!user) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
-          const item= bcrypt.compare(Passwordx, user.Password, (err, data) => {
+            const item = bcrypt.compare(Passwordx, user.Password, (err, data) => {
                 if (err) throw err
                 //if both match than you can do anything
-               
+
                 const response = data ?
-                 
-                Allphanesusermodel.updateOne({Email: email},{$set: {Token:data}}).then(tok=>{
 
-                    if(!tok)return res.json({ack:"0", status:400, message:"Token not update"});
+                    Allphanesusermodel.updateOne({ Email: email }, { $set: { Token: data } }).then(tok => {
 
-                    return res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id })
-                })
-                    
+                        if (!tok) return res.json({ ack: "0", status: 400, message: "Token not update" });
+
+                        return res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id })
+                    })
+
                     : res.json({ ack: "0", status: 400, message: "invallid credential" })
                 return response
             })
@@ -224,72 +265,72 @@ router.get("/emailreset", async (req, res) => {
 
 
 
-router.get("/forgetpassword",async(req,res)=>{
-    try{   
+router.get("/forgetpassword", async (req, res) => {
+    try {
         const randotp = globalfunction.randNum(6)
-        const Emailmatch=await Allphanesusermodel.findOne({Email:req.body.Email}).then(user=>{
-       if(!user) return res.json({ack:"0", status:400, message:"Email not matching"})
-        //  return res.json({ack:"1", status:200, message:"Email matching success",randotp})
-        const token = jwt.sign({ id: Allphanesusermodel.id }, config.secret, {
-            expiresIn: 86400
-        })    
-    })
-    }catch(err){
-        res.json({ack:0, status:500, message:"server Error", error:err})
+        const Emailmatch = await Allphanesusermodel.findOne({ Email: req.body.Email }).then(user => {
+            if (!user) return res.json({ ack: "0", status: 400, message: "Email not matching" })
+            //  return res.json({ack:"1", status:200, message:"Email matching success",randotp})
+            const token = jwt.sign({ id: Allphanesusermodel.id }, config.secret, {
+                expiresIn: 86400
+            })
+        })
+    } catch (err) {
+        res.json({ ack: 0, status: 500, message: "server Error", error: err })
     }
 })
 
 //otp verification
-router.post("/otpverification", async(req,res) => {
-    try{
+router.post("/otpverification", async (req, res) => {
+    try {
         const token = req.body.userToken
         const verifyOtp = req.body.otp
         const currentTime = new Date()
-        await Allphanesusermodel.findOne({userToken: token})
-        .then(user =>{
-            if(!user) return res.json({ack:"0", status:400, message:"Cannot find user"})
-            if(currentTime > user.otpExpTime) return res.json({ack:"0", status:400, message:"OTP Expired, Please resend OTP to try again"})
-            bcrypt.compare(verifyOtp, user.otp, (err, data) => {
-                //if error than throw error
-                if (err) throw err
-                //if both match than you can do anything
-                if(!data) return res.json({ ack: "0", status: 400, message: "OTP not matched, Please enter valid OTP"})
-                //updating user data   
-                Allphanesusermodel.updateOne({ userToken: token }, { $set: { IsActive: true } }, function (err) {
-                    if (err) return res.json({ "ack": 0, status: 401, message: err })
-                    return res.json({ ack: "1", status: 200, message: "OTP matched succesfully"})
+        await Allphanesusermodel.findOne({ userToken: token })
+            .then(user => {
+                if (!user) return res.json({ ack: "0", status: 400, message: "Cannot find user" })
+                if (currentTime > user.otpExpTime) return res.json({ ack: "0", status: 400, message: "OTP Expired, Please resend OTP to try again" })
+                bcrypt.compare(verifyOtp, user.otp, (err, data) => {
+                    //if error than throw error
+                    if (err) throw err
+                    //if both match than you can do anything
+                    if (!data) return res.json({ ack: "0", status: 400, message: "OTP not matched, Please enter valid OTP" })
+                    //updating user data   
+                    Allphanesusermodel.updateOne({ userToken: token }, { $set: { IsActive: true } }, function (err) {
+                        if (err) return res.json({ "ack": 0, status: 401, message: err })
+                        return res.json({ ack: "1", status: 200, message: "OTP matched succesfully" })
+                    })
                 })
             })
-        })
-    }catch(err){
-        res.json({ack:0, status:500, message:"server Error", error:err})
+    } catch (err) {
+        res.json({ ack: 0, status: 500, message: "server Error", error: err })
     }
 })
 
 //user get api
-router.get('/allphanesuserget',async(req,res)=>{
-    try{
-        const data=await Allphanesusermodel.find()
+router.get('/allphanesuserget', async (req, res) => {
+    try {
+        const data = await Allphanesusermodel.find()
         const response = data ?
-            res.json({ack:1, status:1, message:"Allphanusers data get",view:data}):
-            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+            res.json({ ack: 1, status: 1, message: "Allphanusers data get", view: data }) :
+            res.json({ ack: "0", status: 400, message: "Allphanuser data not get" })
         return response
-    }catch(err){
-       res.json({ack:"0", status:500, message:"server error",error:err})
+    } catch (err) {
+        res.json({ ack: "0", status: 500, message: "server error", error: err })
     }
 })
 
 
-const checkUnique = async (req, res, next)=>{
+const checkUnique = async (req, res, next) => {
     console.log(req.body)
     await Allphanesusermodel.findOne(req.body)
-    .then(user =>{
-        if(user) return res.json({ ack: "0", status: 401, message: Object.keys(req.body) + " already Exist" })
-        return res.json({ ack: "0", status: 200, message: req.body })
-    })
-    .catch(err =>{
-        console.log(err)
-    })
+        .then(user => {
+            if (user) return res.json({ ack: "0", status: 401, message: Object.keys(req.body) + " already Exist" })
+            return res.json({ ack: "0", status: 200, message: req.body })
+        })
+        .catch(err => {
+            console.log(err)
+        })
 }
 router.post('/checkunique', checkUnique)
 

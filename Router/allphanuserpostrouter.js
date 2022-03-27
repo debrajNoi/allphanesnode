@@ -3,7 +3,6 @@ const globalfunction = require('../global');
 const Allphanuserpost=require("../Model/allphanuserpostmodel");
 const Allphanuserimagegellary=require("../Model/allphanuserimagegellarymodel");
 const multer=require("multer");
-const imagetest=require("../Model/imagetest");
 const Allphaneuser=require("../Model/allphanesusermodel");
 
 
@@ -11,6 +10,46 @@ const Allphaneuser=require("../Model/allphanesusermodel");
 
 
 const router = express.Router()
+
+router.get("/testing",async(req,res)=>{
+    try {
+        const retailsfind = await Allphanuserpost.aggregate(([
+            {
+                $lookup: {
+                    from: "Allphaneuser",
+                    localField: "_id",
+                    foreignField: "RefrenceUId",
+                    as: "retailleadsdetails"
+                }
+            }
+        ]), function (err, data) {
+            if (err) {
+                res.json({ "ack": 0, status: 401, message: "not view" })
+            } else {
+                res.json({ "ack": 0, status: 201, message: "data found", view: data });
+              
+            }
+        })
+        
+        console.log(retailsfind);
+     } catch (err) {
+        console.log(err.message)
+     }
+})
+router.post("/testinghh",async(req,res)=>{
+    try{
+        
+        const story1 = new Story({
+            title: 'Casino Royale',
+            author: author._id    // assign the _id from the person
+          });
+    const data= await story1.save();
+    console.log(data);
+    }catch(err){
+        res.json({ack:0, status:500, message:"server error",error:err});
+    }
+})
+
 
 router.post('/allphanuserposttitle',async(req,res)=>{
     try{
@@ -212,5 +251,20 @@ router.get('/bl',async(req,res)=>{
     }
 })
 
+
+router.get("/joing",async(req,res)=>{
+    try{
+        Allphaneuser.find({}).populate("Allphanuserpost").exec((err, user) =>{
+            if(err){
+               console.log(err)
+            }else{
+                console.log(user);
+            
+            }
+         });
+    }catch(err){
+        console.log("error");
+    }
+})
 
 module.exports = router;
