@@ -11,6 +11,31 @@ const { route } = require('express/lib/router')
 const { updateOne, findOne } = require('../Model/allphanesusermodel')
 const { response } = require('express');
 const Allphanuserpost = require("../Model/allphanuserpostmodel");
+const sgMail = require("@sendgrid/mail");
+
+const API_KEY = "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";
+
+///////////////test mail///////////
+
+router.post("/mailtest", async (req, res) => {
+    try {
+        console.log("hello");
+        sgMail.setApiKey(API_KEY)
+        const message = {
+            to: "boton.cob2@gmail.com",
+            from: "boton.cob786@gmail.com",
+            subject: "Allphanes otp send",
+            text: "703144"
+        }
+        sgMail.send(message)
+            .then(response => console.log("email send"))
+            .catch((error) => console.log("error"))
+
+    } catch (err) {
+        res.json({ ack: 0, status: 500, message: "server error", error: err });
+    }
+})
+
 
 router.post('/allphanuser', async (req, res, next) => {
     try {
