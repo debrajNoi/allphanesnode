@@ -10,7 +10,9 @@ const app=express()
 
 app.use(cors())
 app.use(express.json())
-app.use(fileUpload())
+app.use(fileUpload({
+    useTempFiles:true
+}))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 

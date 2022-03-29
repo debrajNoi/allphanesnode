@@ -5,14 +5,32 @@ const config = require("../config")
 const usersModel = require("../Model/users")
 const router = express.Router()
 const bcrypt = require("bcrypt")
-// const cloudinary = require("cloudinary").v2;
+const cloudinary = require("cloudinary").v2;
+const img=require("../Model/testimg");
 
-// cloudinary.config({ 
-//     cloud_name: 'dyr5pe2er', 
-//     api_key: '468257612725834', 
-//     api_secret: '58qyQs40AuFUk_O1i8P1cbaivuI',
-//     secure: true
-// });
+cloudinary.config({ 
+    cloud_name: 'dsg7oitoj', 
+    api_key: '271391984486366', 
+    api_secret: 'Ry6sFnb8FCX43-RxriPPyu4oOMI',
+    secure: true
+});
+
+router.post("/test",async(req,res)=>{
+    try{
+        // console.log("hello");
+       const file=req.files.image;
+       cloudinary.uploader.upload(file.tempFilePath,(err,result)=>{
+        //    console.log(result);
+        const item=new img({
+            img:result.url
+        });
+       const data = item.save();
+       console.log(data);
+       })
+    }catch(err){
+        console.log(err);
+    }
+})
 
 //   
 const create = async (req, res, next) => {
