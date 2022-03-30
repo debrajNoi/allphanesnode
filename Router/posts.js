@@ -3,11 +3,18 @@ const globalfunction = require('../global')
 const postsModel=require("../Model/posts")
 const galleryModel=require("../Model/gallery")
 const usersModel=require("../Model/users")
+const cloudinary = require("cloudinary").v2;
 const router = express.Router()
 
 const MongoClient = require('mongodb').MongoClient
 const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabase' 
 
+cloudinary.config({ 
+    cloud_name: 'dsg7oitoj', 
+    api_key: '271391984486366', 
+    api_secret: 'Ry6sFnb8FCX43-RxriPPyu4oOMI',
+    secure: true
+});
   
 // create post************************************************************************************ */
 router.post('/create',async(req,res)=>{
@@ -90,43 +97,48 @@ router.get("/",async(req,res)=>{
 // ************************************************************************************ */
 router.post("/creategallery",async(req,res)=>{
     try{
-        const randvale = (Date.now())
-        let imagepath = ""
-        if (req.files != null) {
-            if (req.files.postImagePath != null) {
-               await req.files.postImagePath.mv("./gellary/image/" + randvale + '.jpg', function (err) {
-                    if (err) {
-                        res.json({ "ack": 0, status: 401, message: "photo upload fail" })
-                    }
-                })
-                imagepath = "gellary/image" + randvale + '.jpg'
-            }
-        }
+        // const randvale = (Date.now())
+        // let imagepath = ""
+        // if (req.files != null) {
+        //     if (req.files.postImagePath != null) {
+        //        await req.files.postImagePath.mv("./gellary/image/" + randvale + '.jpg', function (err) {
+        //             if (err) {
+        //                 res.json({ "ack": 0, status: 401, message: "photo upload fail" })
+        //             }
+        //         })
+        //         imagepath = "gellary/image" + randvale + '.jpg'
+        //     }
+        // }
+        const file=req.files.postImagePath;
+        
         
         const allphanuserdata=await postsModel.find().sort({_id:-1}).limit(1)
-        console.log(allphanuserdata)
+        
          const refid=[]
         
         allphanuserdata.forEach(item=>{
-            // console.log('',item.id + item.createdAt)
+           
             const val=item.id
-            // console.log(val)
+           
             refid.push(val)
         })
         const refId=refid[0]
-        
-//    console.log(new mongoose.Types.ObjectId())
+       
+        await cloudinary.uploader.upload(file.tempFilePath,(err,result)=>{
+    
         const item=new galleryModel({
             refPostId:refId,
-            postImagePath:imagepath,
+            postImagePath:result.url,
             isactive:true,
             isTrash:1,
             status:true
         })
-       await item.save().then(item=>{
-           if(!item)return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
-           return res.json({ack:"1", status:200, message:"Allphanusergellary image upload"})
-       })
+         item.save().then(item=>{
+            //  console.log(item);
+            if(!item) return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
+            return res.json({ack:"1", status:200, message:"Allphanusergellary image upload",view:item});
+        })
+    })
     }catch(err){
         res.json({ack:0, status:500, message:"server error",error:err})
     }
