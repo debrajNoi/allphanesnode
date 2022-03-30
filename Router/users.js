@@ -5,37 +5,50 @@ const config = require("../config")
 const usersModel = require("../Model/users")
 const router = express.Router()
 const bcrypt = require("bcrypt")
-const cloudinary = require("cloudinary").v2;
-const img=require("../Model/testimg");
+const nodemailer = require("nodemailer")
 
-cloudinary.config({ 
-    cloud_name: 'dsg7oitoj', 
-    api_key: '271391984486366', 
-    api_secret: 'Ry6sFnb8FCX43-RxriPPyu4oOMI',
-    secure: true
-});
+// "use strict" mail function ****************************** */
 
-router.post("/test",async(req,res)=>{
-    try{
-     
-       const file=req.files.image;
-      await cloudinary.uploader.upload(file.tempFilePath,(err,result)=>{
-        const item=new img({
-            img:result.url
-        });
-        const data = item.save().then(response=>{
-            console.log(response);
-            res.json({ack:1, status:200, message:"success",view:response});
-        })
+// async..await is not allowed in global scope, must use a wrapper
+async function mail(info) {
 
-       })
-      
-    }catch(err){
-        console.log(err);
-    }
-})
+  // create reusable transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    host: "smtp-mail.outlook.com",
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    tls: {
+        ciphers: "SSLv3",
+        rejectUnauthorized: false,
+    },
+    auth: {
+      user: process.env.AUTH_EMAIL, // generated ethereal user
+      pass: process.env.AUTH_PASS, // generated ethereal password
+    },
+  })
 
-//   
+  // send mail with defined transport object
+  await transporter.sendMail(info)
+
+}
+// const cloudinary = require("cloudinary").v2
+
+// cloudinary.config({ 
+//     cloud_name: 'dyr5pe2er', 
+//     api_key: '468257612725834', 
+//     api_secret: '58qyQs40AuFUk_O1i8P1cbaivuI',
+//     secure: true
+// })
+
+// update users ********************************************* _*/
+const updateUsers = async (findObj, dataObj) =>{
+    await usersModel.findOneAndUpdate(findObj, { $set: dataObj }, function (err) {
+        if (err) return res.json({ "ack": 0, status: 401, message: err })
+        return res.json({ ack: "1", status: 200, message: "OTP send Successfully", otp: randotp})
+    })
+}
+
+// create users ********************************************* _*/
 const create = async (req, res, next) => {
     try {
         const currentDate = new Date()
@@ -56,6 +69,15 @@ const create = async (req, res, next) => {
             otp: hashOTP,
             otpExpTime: otpExp
         })
+
+        // mail function 
+        let info = {
+            from: '"noreply@Allphanes"'+ process.env.AUTH_EMAIL, // sender address
+            to: email, // list of receivers
+            subject: "Allphanes email Verification", // Subject line
+            html: "<h2>Please verify your Email</h2><h1>"+ randotp +"</h1><p>(This code is valid for 10 minutes)</p>", // html body
+        }
+        await mail(info).catch(console.error)
 
         await usersModel.findOne({ email: email, phone : phone })
         .then(user => {
@@ -126,13 +148,13 @@ router.get('/',async(req,res)=>{
        res.json({ack:"0", status:500, message:"server error",error:err})
     }
 })
-// delete users id********************************************************************** /
+// delete users by id********************************************************************** /
 router.delete("/:id",async(req,res)=>{
     try{
         const deleted = await usersModel.findByIdAndRemove({_id : req.params.id})
-        if(deleted) res.json({ack:"1", status:200, message:"Deleted Successfully"});
+        if(deleted) res.json({ack:"1", status:200, message:"Deleted Successfully"})
     }catch(err){
-        res.json({ack:0, status:500, message:"server error",error:err});
+        res.json({ack:0, status:500, message:"server error",error:err})
     }
 })
 
@@ -229,6 +251,55 @@ router.post("/otpverification", async(req,res) => {
         })
     }catch(err){
         res.json({ack:0, status:500, message:"server Error", error:err})
+    }
+})
+// resend OTP ********************************************* _*/
+router.post("/resendotp", async(req,res) => {
+    try{
+        const id = req.body.id
+        const randotp = globalfunction.randNum(6)
+        const hashOTP = await bcrypt.hash(randotp, 10)
+
+        const currentDate = new Date()
+        let otpExp = new Date()
+        otpExp.setTime(currentDate.getTime() + (10 * 60 * 1000))
+
+        // console.log(id)
+    
+        await usersModel.findOne({_id: id})
+        .then(user =>{
+            if(!user) return res.json({ack:"0", status:400, message:"Cannot find user"})
+              
+            // mail function 
+            let info = {
+                from: '"noreply@Allphanes"'+ process.env.AUTH_EMAIL, // sender address
+                to: user.email, // list of receivers
+                subject: "Allphanes email Verification", // Subject line
+                html: "<h2>Please verify your Email</h2><h1>"+ randotp +"</h1><p>(This code is valid for 10 minutes)</p>", // html body
+            }
+            mail(info).catch(console.error)
+        
+            usersModel.findOneAndUpdate({ _id: id }, { $set: { otp: hashOTP, otpExpTime:  otpExp} }, function (err) {
+                if (err) return res.json({ "ack": 0, status: 401, message: err })
+                return res.json({ ack: "1", status: 200, message: "OTP send Successfully", otp: randotp})
+            })
+        })
+    }catch(err){
+        res.json({ack:0, status:500, message:"server Error", error:err})
+    }
+})
+
+// get online users ********************************************* _*/
+router.get('/online',async(req,res)=>{
+    try{
+        const data = await usersModel.find({isActive : true})
+        console.log(data)
+        const response = data ?
+            res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
+            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+        return response
+    }catch(err){
+       res.json({ack:"0", status:500, message:"server error",error:err})
     }
 })
 
