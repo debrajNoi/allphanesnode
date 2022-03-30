@@ -19,14 +19,19 @@ router.post("/test",async(req,res)=>{
     try{
         // console.log("hello");
        const file=req.files.image;
-       cloudinary.uploader.upload(file.tempFilePath,(err,result)=>{
+      await cloudinary.uploader.upload(file.tempFilePath,(err,result)=>{
         //    console.log(result);
         const item=new img({
             img:result.url
         });
-       const data = item.save();
-       console.log(data);
+        const data = item.save().then(response=>{
+            console.log(response);
+            res.json({ack:1, status:200, message:"success",view:response});
+        })
+        // console.log(data);
+    //     res.json({ack:1, status:200, message:"success",view:data});
        })
+      
     }catch(err){
         console.log(err);
     }
