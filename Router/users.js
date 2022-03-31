@@ -31,14 +31,7 @@ async function mail(info) {
   await transporter.sendMail(info)
 
 }
-// const cloudinary = require("cloudinary").v2
 
-// cloudinary.config({ 
-//     cloud_name: 'dyr5pe2er', 
-//     api_key: '468257612725834', 
-//     api_secret: '58qyQs40AuFUk_O1i8P1cbaivuI',
-//     secure: true
-// })
 
 // update users ********************************************* _*/
 const updateUsers = async (findObj, dataObj) =>{
@@ -185,7 +178,10 @@ router.post("/login", async (req, res) => {
                 //     return response
                 // }             
                 const response = data ?
-                    res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
+                  usersModel.updateOne({ email: req.body.email }, { $set: { isActive: true }}).then(response=>{
+                    if(response)return  res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP ,active:user.IsActive})
+                })
+                    // res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
                     : res.json({ ack: "0", status: 400, message: "invallid credential" })
                 
                 return response

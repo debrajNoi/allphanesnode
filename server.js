@@ -8,9 +8,9 @@ const PORT = process.env.PORT || 8000
 
 const app=express()
 
-app.use(cors())
+// app.use(cors())
 app.use(express.json())
-app.use(fileUpload())
+// app.use(fileUpload())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 
