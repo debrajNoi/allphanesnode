@@ -110,7 +110,7 @@ router.post("/creategallery",async(req,res)=>{
         //     }
         // }
         const file=req.files.postImagePath;
-        
+        // console.log(file);
         
         const allphanuserdata=await postsModel.find().sort({_id:-1}).limit(1)
         
@@ -125,7 +125,7 @@ router.post("/creategallery",async(req,res)=>{
         const refId=refid[0]
        
         await cloudinary.uploader.upload(file.tempFilePath,(err,result)=>{
-    
+        console.log(result);
         const item=new galleryModel({
             refPostId:refId,
             postImagePath:result.url,
