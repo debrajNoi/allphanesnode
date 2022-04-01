@@ -6,6 +6,9 @@ const usersModel = require("../Model/users")
 const router = express.Router()
 const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
+const auth=require("../middleware/authcheck")
+// const jwt=require("jsonwebtoken");
+// const config=require("../config");
 
 // "use strict" mail function ****************************** */
 
@@ -34,7 +37,7 @@ async function mail(info) {
 
 
 // update users ********************************************* _*/
-const updateUsers = async (findObj, dataObj) =>{
+const updateForAll = async (findObj, dataObj) =>{
     await usersModel.findOneAndUpdate(findObj, { $set: dataObj }, function (err) {
         if (err) return res.json({ "ack": 0, status: 401, message: err })
         return res.json({ ack: "1", status: 200, message: "OTP send Successfully", otp: randotp})
@@ -53,6 +56,7 @@ const create = async (req, res, next) => {
         const hashPass = await bcrypt.hash(req.body.password, salt)
         const randotp = globalfunction.randNum(6)
         const hashOTP = await bcrypt.hash(randotp, salt)
+        
         const item = new usersModel({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
@@ -75,10 +79,13 @@ const create = async (req, res, next) => {
         await usersModel.findOne({ email: email, phone : phone })
         .then(user => {
             if(user) return res.json({ ack: "0", status: 401, message: "Registration not succesfull, email or Phone Number alredy exist"})
-            const a1 = item.save( err => {
+            const a1 = item.save( err => {       
+                const token = jwt.sign({ id: item._id }, config.secret, {
+                    expiresIn: 86400
+                }) 
                 err ?
                     res.json({ ack: "0", status: 401, message: "AllphaneUser data Not Insert"}):
-                    res.json({ ack: "1", status: 200, message: "AllphaneUser data  Insert SuccesFully", otp : randotp, id : item._id})
+                    res.json({ ack: "1", status: 200, message: "AllphaneUser data  Insert SuccesFully", otp : randotp, id : item._id,token:token})
             })
         })
         .catch(err =>{console.log(err)})
@@ -87,6 +94,8 @@ const create = async (req, res, next) => {
         return res.json({ ack: 0, status: 500, message: "server error" })
     }
 }
+
+
 
 // edit ********************************************************************** /
 const update = async (req,res) => {
@@ -150,6 +159,17 @@ router.delete("/:id",async(req,res)=>{
         res.json({ack:0, status:500, message:"server error",error:err})
     }
 })
+///use details*************
+
+router.get("/:id",auth, async(req,res)=>{
+    try{
+      const details=await usersModel.find({_id:req.params.id}).then(response=>{
+          if(response)return res.json({ack:"1", status:200, message:"Details Successfully",view:response}) ;
+      })
+    }catch(err){
+        res.json({ack:0, status:500, message:"server error",error:err});
+    }
+})
 
 // login controller ********************************************************** /
 router.post("/login", async (req, res) => {
@@ -163,7 +183,7 @@ router.post("/login", async (req, res) => {
         let otpExT = new Date()
         otpExT.setTime(currentDate.getTime() + (10 * 60 * 1000))
         
-        await usersModel.findOne({ email: email }).then(user => {
+      const user=  await usersModel.findOne({ email: email }).then(user => {
             ///if user not exit
             if (!user) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
             const item = bcrypt.compare(password, user.password, (err, data) => {
@@ -179,7 +199,10 @@ router.post("/login", async (req, res) => {
                 // }             
                 const response = data ?
                   usersModel.updateOne({ email: req.body.email }, { $set: { isActive: true }}).then(response=>{
-                    if(response)return  res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP ,active:user.IsActive})
+                    var token = jwt.sign({ id: user.id ,isVerified: user.isEmailVerified, name:user.firstName+ ' '+user.lastName}, config.secret, {
+                        expiresIn: 86400 // expires in 24 hours
+                    });
+                    if(response)return  res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP ,active:user.IsActive,token:token})
                 })
                     // res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
                     : res.json({ ack: "0", status: 400, message: "invallid credential" })
@@ -224,9 +247,9 @@ router.get("/forgetpassword",async(req,res)=>{
 })
 
 //otp verification 
-router.post("/otpverification", async(req,res) => {
+router.post("/otpverification/:id",auth, async(req,res) => {
     try{
-        const id = req.body.id
+        const id = req.params.id
         const verifyOTP = req.body.otp
         const currentTime = new Date()
         await usersModel.findOne({_id: id})
@@ -250,9 +273,9 @@ router.post("/otpverification", async(req,res) => {
     }
 })
 // resend OTP ********************************************* _*/
-router.post("/resendotp", async(req,res) => {
+router.post("/resendotp/:id",auth, async(req,res) => {
     try{
-        const id = req.body.id
+        const id = req.params.id
         const randotp = globalfunction.randNum(6)
         const hashOTP = await bcrypt.hash(randotp, 10)
 

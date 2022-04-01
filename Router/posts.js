@@ -3,18 +3,22 @@ const globalfunction = require('../global')
 const postsModel=require("../Model/posts")
 const galleryModel=require("../Model/gallery")
 const usersModel=require("../Model/users")
+const notification=require("../Model/notification")
 const router = express.Router()
+const auth=require("../middleware/authcheck");
 const cloudinary = require("cloudinary").v2;
+const Comment=require("../Model/comment");
 const MongoClient = require('mongodb').MongoClient
 const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabase' 
 
 
 cloudinary.config({ 
-    cloud_name: 'dsg7oitoj', 
-    api_key: '271391984486366', 
-    api_secret: 'Ry6sFnb8FCX43-RxriPPyu4oOMI',
+    cloud_name: process.env.CLOUD_NAME, 
+    api_key: process.env.API_KEY, 
+    api_secret: process.env.API_SECRET,
     secure: true
 });
+
   
 // create post************************************************************************************ */
 router.post('/create',async(req,res)=>{
@@ -45,46 +49,38 @@ router.get("/",async(req,res)=>{
                             foreignField: "_id",
                             as: "user_info"
                         }
+                    },  
+                    {
+                        $lookup: {
+                            from: "galleries",
+                            localField: "_id",
+                            foreignField: "refPostId",
+                            as: "gellary"
+                        }
                     },
-                    // { $unwind: "$user_info" },
-                    // define some conditions here 
                     {
                         $match:{
                             $and:[{"isActive" : true}]
                         }
                     },
                     {$sort: {"createdAt": -1}},
+                   
                     // {
-                    //     $lookup: {
-                    //         from: "userInfo",
-                    //         localField: "userId",
-                    //         foreignField: "userId",
-                    //         as: "userInfo"
+                    //     $project: {
+                    //         "posts._id": 1,
+                    //         "postTitle": 1,
+                    //         "postDescription" : 1,
+                    //         "createdAt" : 1,
+                    //         "user_info.firstName": 1,
+                    //         "user_info.lastName": 1,
+                    //         // "userInfo._id":0
                     //     }
-                    // },
-                    // { $lookup:
-                    //   {
-                    //     from: 'users',
-                    //     localField: 'referenceUserId',
-                    //     foreignField: '_id',
-                    //     as: 'details'
-                    //   }
                     // }
-                    {
-                        $project: {
-                            "posts._id": 1,
-                            "postTitle": 1,
-                            "postDescription" : 1,
-                            "createdAt" : 1,
-                            "user_info.firstName": 1,
-                            "user_info.lastName": 1,
-                            // "userInfo._id":0
-                        }
-                    }
                     
                 ]).toArray(function (err, response) {
                     if (err)
                         throw err
+                        console.log(response);
                     // console.log(res[0])
                     res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
                     db.close()
@@ -127,7 +123,8 @@ router.post("/creategallery",async(req,res)=>{
         await cloudinary.uploader.upload(file.tempFilePath,(err,result)=>{
         console.log(result);
         const item=new galleryModel({
-            refPostId:refId,
+            // refPostId:refId,
+            refPostId:req.body.refPostId,
             postImagePath:result.url,
             isactive:true,
             isTrash:1,
@@ -141,6 +138,46 @@ router.post("/creategallery",async(req,res)=>{
     })
     }catch(err){
         res.json({ack:0, status:500, message:"server error",error:err})
+    }
+})
+
+router.post("/createnotifications",auth,async(req,res)=>{
+    try{
+        const allphanuserdata=await postsModel.find().sort({_id:-1}).limit(1)
+        
+        const refid=[]
+       
+       allphanuserdata.forEach(item=>{
+          
+           const val=item.id
+          
+           refid.push(val)
+       })
+       const refId=refid[0]
+       console.log(refId);
+
+      const notificationcheck=new notification({
+        refrenceUId:1,
+        postId:refId,
+        notiMsg:req.body.notiMsg
+      })
+      await notificationcheck.save().then(response=>{
+          if(response)return res.json({ack:1, status:200, message:"Notification successFully"});
+          return res.json({ack:0, status:400, message:"notification Fails"})
+      })
+    }catch(err){
+        res.json({ack:0, status:500, message:"Server error",error:err});
+    }
+});
+
+router.post("/notification",async(req,res)=>{
+    try{
+         const notifind=await notification.find().then(response=>{
+             if(response)return res.json({ack:0, status:200, message:"notification success",view:response});
+             return res.json({ack:0, status:400, message:"not success"});
+         })
+    }catch(err){
+        return res.json({ack:0, status:500, message:"server error",error:err});
     }
 })
 
@@ -225,6 +262,17 @@ router.post("/creategallery",async(req,res)=>{
 //         return res.json({ack:0, status:500, message:"server error",error:err});
 //     }
 // })
+
+router.get("/commentdelete/:id",async(req,res)=>{
+    try{
+    const cmddelete=await Comment.findByIdAndDelete(req.params.id).then(err=>{
+        if(err)return res.json({ack:0, status:400, message:"Delete not success"})
+        return res.json({ack:1, status:200, message:"Deleted success"});
+    })
+    }catch(err){
+        res.json({ack:0, status:500, message:"server error",error:err});
+    }
+})
 
 // router.get("/commentget",async(req,res)=>{
 //     try{
