@@ -322,6 +322,16 @@ router.get('/online',async(req,res)=>{
     }
 })
 
+router.get("/membar",async(req,res)=>{
+    try{
+    const user=await usersModel.find().then(item=>{
+        
+    })
+    }catch(err){
+        res.json({ack:0, status:500, message:"server error",error:err});
+    }
+})
+
 // all Roueters ********************************************* _*/
 router.post('/create', create)
 router.post('/edit/:id', update)
