@@ -3,21 +3,10 @@ const globalfunction = require('../global')
 const postsModel=require("../Model/posts")
 const galleryModel=require("../Model/gallery")
 const usersModel=require("../Model/users")
-const notification=require("../Model/notification")
 const router = express.Router()
-const auth=require("../middleware/authcheck");
-const cloudinary = require("cloudinary").v2;
-const Comment=require("../Model/comment");
+
 const MongoClient = require('mongodb').MongoClient
 const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabase' 
-
-
-cloudinary.config({ 
-    cloud_name: process.env.CLOUD_NAME, 
-    api_key: process.env.API_KEY, 
-    api_secret: process.env.API_SECRET,
-    secure: true
-});
 
   
 // create post************************************************************************************ */
@@ -49,38 +38,46 @@ router.get("/",async(req,res)=>{
                             foreignField: "_id",
                             as: "user_info"
                         }
-                    },  
-                    {
-                        $lookup: {
-                            from: "galleries",
-                            localField: "_id",
-                            foreignField: "refPostId",
-                            as: "gellary"
-                        }
                     },
+                    // { $unwind: "$user_info" },
+                    // define some conditions here 
                     {
                         $match:{
                             $and:[{"isActive" : true}]
                         }
                     },
                     {$sort: {"createdAt": -1}},
-                   
                     // {
-                    //     $project: {
-                    //         "posts._id": 1,
-                    //         "postTitle": 1,
-                    //         "postDescription" : 1,
-                    //         "createdAt" : 1,
-                    //         "user_info.firstName": 1,
-                    //         "user_info.lastName": 1,
-                    //         // "userInfo._id":0
+                    //     $lookup: {
+                    //         from: "userInfo",
+                    //         localField: "userId",
+                    //         foreignField: "userId",
+                    //         as: "userInfo"
                     //     }
+                    // },
+                    // { $lookup:
+                    //   {
+                    //     from: 'users',
+                    //     localField: 'referenceUserId',
+                    //     foreignField: '_id',
+                    //     as: 'details'
+                    //   }
                     // }
+                    {
+                        $project: {
+                            "posts._id": 1,
+                            "postTitle": 1,
+                            "postDescription" : 1,
+                            "createdAt" : 1,
+                            "user_info.firstName": 1,
+                            "user_info.lastName": 1,
+                            // "userInfo._id":0
+                        }
+                    }
                     
                 ]).toArray(function (err, response) {
                     if (err)
                         throw err
-                        console.log(response);
                     // console.log(res[0])
                     res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
                     db.close()
@@ -93,94 +90,47 @@ router.get("/",async(req,res)=>{
 // ************************************************************************************ */
 router.post("/creategallery",async(req,res)=>{
     try{
-        // const randvale = (Date.now())
-        // let imagepath = ""
-        // if (req.files != null) {
-        //     if (req.files.postImagePath != null) {
-        //        await req.files.postImagePath.mv("./gellary/image/" + randvale + '.jpg', function (err) {
-        //             if (err) {
-        //                 res.json({ "ack": 0, status: 401, message: "photo upload fail" })
-        //             }
-        //         })
-        //         imagepath = "gellary/image" + randvale + '.jpg'
-        //     }
-        // }
-        const file=req.files.postImagePath;
-        // console.log(file);
+        const randvale = (Date.now())
+        let imagepath = ""
+        if (req.files != null) {
+            if (req.files.postImagePath != null) {
+               await req.files.postImagePath.mv("./gellary/image/" + randvale + '.jpg', function (err) {
+                    if (err) {
+                        res.json({ "ack": 0, status: 401, message: "photo upload fail" })
+                    }
+                })
+                imagepath = "gellary/image" + randvale + '.jpg'
+            }
+        }
         
         const allphanuserdata=await postsModel.find().sort({_id:-1}).limit(1)
-        
+        console.log(allphanuserdata)
          const refid=[]
         
         allphanuserdata.forEach(item=>{
-           
+            // console.log('',item.id + item.createdAt)
             const val=item.id
-           
+            // console.log(val)
             refid.push(val)
         })
         const refId=refid[0]
-       
-        await cloudinary.uploader.upload(file.tempFilePath,(err,result)=>{
-        console.log(result);
+        
+//    console.log(new mongoose.Types.ObjectId())
         const item=new galleryModel({
-            // refPostId:refId,
-            refPostId:req.body.refPostId,
-            postImagePath:result.url,
+            refPostId:refId,
+            postImagePath:imagepath,
             isactive:true,
             isTrash:1,
             status:true
         })
-         item.save().then(item=>{
-            //  console.log(item);
-            if(!item) return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
-            return res.json({ack:"1", status:200, message:"Allphanusergellary image upload",view:item});
-        })
-    })
+       await item.save().then(item=>{
+           if(!item)return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
+           return res.json({ack:"1", status:200, message:"Allphanusergellary image upload"})
+       })
     }catch(err){
         res.json({ack:0, status:500, message:"server error",error:err})
     }
 })
-
-router.post("/createnotifications",auth,async(req,res)=>{
-    try{
-        const allphanuserdata=await postsModel.find().sort({_id:-1}).limit(1)
-        
-        const refid=[]
-       
-       allphanuserdata.forEach(item=>{
-          
-           const val=item.id
-          
-           refid.push(val)
-       })
-       const refId=refid[0]
-       console.log(refId);
-
-      const notificationcheck=new notification({
-        refrenceUId:1,
-        postId:refId,
-        notiMsg:req.body.notiMsg
-      })
-      await notificationcheck.save().then(response=>{
-          if(response)return res.json({ack:1, status:200, message:"Notification successFully"});
-          return res.json({ack:0, status:400, message:"notification Fails"})
-      })
-    }catch(err){
-        res.json({ack:0, status:500, message:"Server error",error:err});
-    }
-});
-
-router.post("/notification",async(req,res)=>{
-    try{
-         const notifind=await notification.find().then(response=>{
-             if(response)return res.json({ack:0, status:200, message:"notification success",view:response});
-             return res.json({ack:0, status:400, message:"not success"});
-         })
-    }catch(err){
-        return res.json({ack:0, status:500, message:"server error",error:err});
-    }
-})
-
 
 // router.get("/statusdelete/:id",async(req,res)=>{
 //     try{
@@ -262,17 +212,6 @@ router.post("/notification",async(req,res)=>{
 //         return res.json({ack:0, status:500, message:"server error",error:err});
 //     }
 // })
-
-router.get("/commentdelete/:id",async(req,res)=>{
-    try{
-    const cmddelete=await Comment.findByIdAndDelete(req.params.id).then(err=>{
-        if(err)return res.json({ack:0, status:400, message:"Delete not success"})
-        return res.json({ack:1, status:200, message:"Deleted success"});
-    })
-    }catch(err){
-        res.json({ack:0, status:500, message:"server error",error:err});
-    }
-})
 
 // router.get("/commentget",async(req,res)=>{
 //     try{

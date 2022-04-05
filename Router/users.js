@@ -6,9 +6,6 @@ const usersModel = require("../Model/users")
 const router = express.Router()
 const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
-const auth=require("../middleware/authcheck")
-// const jwt=require("jsonwebtoken");
-// const config=require("../config");
 
 // "use strict" mail function ****************************** */
 
@@ -34,10 +31,17 @@ async function mail(info) {
   await transporter.sendMail(info)
 
 }
+// const cloudinary = require("cloudinary").v2
 
+// cloudinary.config({ 
+//     cloud_name: 'dyr5pe2er', 
+//     api_key: '468257612725834', 
+//     api_secret: '58qyQs40AuFUk_O1i8P1cbaivuI',
+//     secure: true
+// })
 
 // update users ********************************************* _*/
-const updateForAll = async (findObj, dataObj) =>{
+const updateUsers = async (findObj, dataObj) =>{
     await usersModel.findOneAndUpdate(findObj, { $set: dataObj }, function (err) {
         if (err) return res.json({ "ack": 0, status: 401, message: err })
         return res.json({ ack: "1", status: 200, message: "OTP send Successfully", otp: randotp})
@@ -56,7 +60,6 @@ const create = async (req, res, next) => {
         const hashPass = await bcrypt.hash(req.body.password, salt)
         const randotp = globalfunction.randNum(6)
         const hashOTP = await bcrypt.hash(randotp, salt)
-        
         const item = new usersModel({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
@@ -79,13 +82,10 @@ const create = async (req, res, next) => {
         await usersModel.findOne({ email: email, phone : phone })
         .then(user => {
             if(user) return res.json({ ack: "0", status: 401, message: "Registration not succesfull, email or Phone Number alredy exist"})
-            const a1 = item.save( err => {       
-                const token = jwt.sign({ id: item._id }, config.secret, {
-                    expiresIn: 86400
-                }) 
+            const a1 = item.save( err => {
                 err ?
                     res.json({ ack: "0", status: 401, message: "AllphaneUser data Not Insert"}):
-                    res.json({ ack: "1", status: 200, message: "AllphaneUser data  Insert SuccesFully", otp : randotp, id : item._id,token:token})
+                    res.json({ ack: "1", status: 200, message: "AllphaneUser data  Insert SuccesFully", otp : randotp, id : item._id})
             })
         })
         .catch(err =>{console.log(err)})
@@ -94,8 +94,6 @@ const create = async (req, res, next) => {
         return res.json({ ack: 0, status: 500, message: "server error" })
     }
 }
-
-
 
 // edit ********************************************************************** /
 const update = async (req,res) => {
@@ -159,17 +157,6 @@ router.delete("/:id",async(req,res)=>{
         res.json({ack:0, status:500, message:"server error",error:err})
     }
 })
-///use details*************
-
-router.get("/:id",auth, async(req,res)=>{
-    try{
-      const details=await usersModel.find({_id:req.params.id}).then(response=>{
-          if(response)return res.json({ack:"1", status:200, message:"Details Successfully",view:response}) ;
-      })
-    }catch(err){
-        res.json({ack:0, status:500, message:"server error",error:err});
-    }
-})
 
 // login controller ********************************************************** /
 router.post("/login", async (req, res) => {
@@ -183,7 +170,7 @@ router.post("/login", async (req, res) => {
         let otpExT = new Date()
         otpExT.setTime(currentDate.getTime() + (10 * 60 * 1000))
         
-      const user=  await usersModel.findOne({ email: email }).then(user => {
+        await usersModel.findOne({ email: email }).then(user => {
             ///if user not exit
             if (!user) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
             const item = bcrypt.compare(password, user.password, (err, data) => {
@@ -198,13 +185,7 @@ router.post("/login", async (req, res) => {
                 //     return response
                 // }             
                 const response = data ?
-                  usersModel.updateOne({ email: req.body.email }, { $set: { isActive: true }}).then(response=>{
-                    var token = jwt.sign({ id: user.id ,isVerified: user.isEmailVerified, name:user.firstName+ ' '+user.lastName}, config.secret, {
-                        expiresIn: 86400 // expires in 24 hours
-                    });
-                    if(response)return  res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP ,active:user.IsActive,token:token})
-                })
-                    // res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
+                    res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
                     : res.json({ ack: "0", status: 400, message: "invallid credential" })
                 
                 return response
@@ -247,9 +228,9 @@ router.get("/forgetpassword",async(req,res)=>{
 })
 
 //otp verification 
-router.post("/otpverification/:id",auth, async(req,res) => {
+router.post("/otpverification", async(req,res) => {
     try{
-        const id = req.params.id
+        const id = req.body.id
         const verifyOTP = req.body.otp
         const currentTime = new Date()
         await usersModel.findOne({_id: id})
@@ -273,9 +254,9 @@ router.post("/otpverification/:id",auth, async(req,res) => {
     }
 })
 // resend OTP ********************************************* _*/
-router.post("/resendotp/:id",auth, async(req,res) => {
+router.post("/resendotp", async(req,res) => {
     try{
-        const id = req.params.id
+        const id = req.body.id
         const randotp = globalfunction.randNum(6)
         const hashOTP = await bcrypt.hash(randotp, 10)
 
@@ -319,16 +300,6 @@ router.get('/online',async(req,res)=>{
         return response
     }catch(err){
        res.json({ack:"0", status:500, message:"server error",error:err})
-    }
-})
-
-router.get("/membar",async(req,res)=>{
-    try{
-    const user=await usersModel.find().then(item=>{
-        
-    })
-    }catch(err){
-        res.json({ack:0, status:500, message:"server error",error:err});
     }
 })
 
