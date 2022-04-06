@@ -11,6 +11,7 @@ const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabas
   
 // create post************************************************************************************ */
 router.post('/create',async(req,res)=>{
+    
     try{
         const data = new postsModel(req.body)
         
