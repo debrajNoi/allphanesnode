@@ -6,7 +6,8 @@ const usersModel=require("../Model/users")
 const router = express.Router()
 
 const MongoClient = require('mongodb').MongoClient
-const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabase' 
+// const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabase' 
+const url='mongodb+srv://allphanes:7031445611@allphanescluster.x5i5t.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 
   
 // create post************************************************************************************ */
@@ -30,7 +31,7 @@ router.get("/",async(req,res)=>{
         MongoClient.connect(url, function (err, db) {
                 if (err)
                     throw err
-                let dbo = db.db("Allphanesdatabase")
+                let dbo = db.db("myFirstDatabase")
                 dbo.collection('posts').aggregate([
                     {
                         $lookup: {
