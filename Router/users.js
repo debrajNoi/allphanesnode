@@ -158,6 +158,20 @@ router.delete("/:id",async(req,res)=>{
     }
 })
 
+router.get('/members',async(req,res)=>{
+    try{
+        console.log('hola')
+        const data = await usersModel.find({ _id: { $ne: "624550617095d8347dd3a599" } }).select(["firstName","lastName"])        
+        const response = data ?
+            res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
+            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+        return response
+    }catch(err){
+       res.json({ack:"0", status:500, message:"server error",error:err})
+    }
+})
+
+
 // login controller ********************************************************** /
 router.post("/login", async (req, res) => {
     try {
