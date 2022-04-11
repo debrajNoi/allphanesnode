@@ -16,11 +16,11 @@ app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 
 const usersController=require("./Router/users")
 const postsController=require("./Router/posts")
-const friendController=require("./Router/friend");
+const servicesController = require("./Router/services")
 
 app.use('/api/users',usersController)
 app.use('/api/posts',postsController)
-app.use('/api/friend',friendController)
+app.use('/api/services',servicesController)
 
 app.listen(PORT,function(){
     console.log("server is running")

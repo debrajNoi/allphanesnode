@@ -31,14 +31,6 @@ async function mail(info) {
   await transporter.sendMail(info)
 
 }
-// const cloudinary = require("cloudinary").v2
-
-// cloudinary.config({ 
-//     cloud_name: 'dyr5pe2er', 
-//     api_key: '468257612725834', 
-//     api_secret: '58qyQs40AuFUk_O1i8P1cbaivuI',
-//     secure: true
-// })
 
 // update users ********************************************* _*/
 const updateUsers = async (findObj, dataObj) =>{
@@ -139,7 +131,18 @@ const update = async (req,res) => {
 router.get('/',async(req,res)=>{
     try{
         const data = await usersModel.find()
-        console.log(data)
+        const response = data ?
+            res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
+            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+        return response
+    }catch(err){
+       res.json({ack:"0", status:500, message:"server error",error:err})
+    }
+})
+
+router.post('/members',async(req,res)=>{
+    try{
+        const data = await usersModel.find({ _id: { $ne: req.body.id } }).select(["firstName", "lastName"])       
         const response = data ?
             res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
             res.json({ack:"0", status:400, message:"Allphanuser data not get"})
@@ -157,20 +160,6 @@ router.delete("/:id",async(req,res)=>{
         res.json({ack:0, status:500, message:"server error",error:err})
     }
 })
-
-router.get('/members',async(req,res)=>{
-    try{
-        console.log('hola')
-        const data = await usersModel.find({ _id: { $ne: "624550617095d8347dd3a599" } }).select(["firstName","lastName"])        
-        const response = data ?
-            res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
-            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
-        return response
-    }catch(err){
-       res.json({ack:"0", status:500, message:"server error",error:err})
-    }
-})
-
 
 // login controller ********************************************************** /
 router.post("/login", async (req, res) => {
@@ -197,7 +186,9 @@ router.post("/login", async (req, res) => {
                 //     })
                 //     //needed mail code
                 //     return response
-                // }             
+                // } 
+                usersModel.findOneAndUpdate({email: email},{$set: {isActive :true}})
+                    
                 const response = data ?
                     res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
                     : res.json({ ack: "0", status: 400, message: "invallid credential" })
@@ -307,7 +298,6 @@ router.post("/resendotp", async(req,res) => {
 router.get('/online',async(req,res)=>{
     try{
         const data = await usersModel.find({isActive : true})
-        console.log(data)
         const response = data ?
             res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
             res.json({ack:"0", status:400, message:"Allphanuser data not get"})
