@@ -8,6 +8,42 @@ const router = express.Router()
 const MongoClient = require('mongodb').MongoClient
 const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabase' 
 
+const cloudinary=require("cloudinary").v2 
+
+cloudinary.config({ 
+    cloud_name: "dsg7oitoj", 
+    api_key: "271391984486366", 
+    api_secret: "Ry6sFnb8FCX43-RxriPPyu4oOMI",
+    secure: true
+});
+
+router.post("/creategallery",async(req,res)=>{
+    try {
+        const fileStr = req.body.image;
+        // console.log(fileStr)
+        const uploadResponse = await cloudinary.uploader.upload(fileStr);
+        // console.log(uploadResponse.secure_url);
+        if(uploadResponse.secure_url){
+            const item=new postsModel({
+                referenceUserId : "624403e6128d1159babc357f",
+                postTitle: req.body.title,
+                postImage: uploadResponse.secure_url,
+                postDescription : req.body.text
+            })
+            const itex= await item.save().then(item=>{
+                if(!item)
+                    return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
+                    
+                return res.json({ack:"1", status:200, message:"Allphanusergellary image upload",view:item});
+            })
+        }
+        
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ err: 'Something went wrong' });
+    }
+
+})
   
 // create post************************************************************************************ */
 router.post('/create',async(req,res)=>{
@@ -63,17 +99,18 @@ router.get("/",async(req,res)=>{
                     //     as: 'details'
                     //   }
                     // }
-                    {
-                        $project: {
-                            "posts._id": 1,
-                            "postTitle": 1,
-                            "postDescription" : 1,
-                            "createdAt" : 1,
-                            "user_info.firstName": 1,
-                            "user_info.lastName": 1,
-                            // "userInfo._id":0
-                        }
-                    }
+                    // {
+                    //     $project: {
+                    //         "posts._id": 1,
+                    //         "postTitle": 1,
+                    //         "postDescription" : 1,
+                    //         "imagePath" : 1,
+                    //         "createdAt" : 1,
+                    //         "user_info.firstName": 1,
+                    //         "user_info.lastName": 1,
+                    //         // "userInfo._id":0
+                    //     }
+                    // }
                     
                 ]).toArray(function (err, response) {
                     if (err)
