@@ -23,13 +23,15 @@ router.post("/creategallery",async(req,res)=>{
         // console.log(fileStr)
         const uploadResponse = await cloudinary.uploader.upload(fileStr);
         // console.log(uploadResponse.secure_url);
+        console.log(uploadResponse);
         if(uploadResponse.secure_url){
             const item=new postsModel({
-                referenceUserId : "624403e6128d1159babc357f",
+                referenceUserId : req.body.referenceUserId,
                 postTitle: req.body.title,
                 postImage: uploadResponse.secure_url,
                 postDescription : req.body.text
             })
+            // console.log(item);
             const itex= await item.save().then(item=>{
                 if(!item)
                     return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
@@ -125,7 +127,7 @@ router.get("/",async(req,res)=>{
     }
 })
 // ************************************************************************************ */
-router.post("/creategallery",async(req,res)=>{
+router.post("/creategallerys",async(req,res)=>{
     try{
         const randvale = (Date.now())
         let imagepath = ""
