@@ -66,6 +66,7 @@ router.get("/",async(req,res)=>{
                 if (err)
                     throw err
                 let dbo = db.db("myFirstDatabase")
+                
                 dbo.collection('posts').aggregate([
                     {
                         $lookup: {
