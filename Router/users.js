@@ -6,6 +6,14 @@ const usersModel = require("../Model/users")
 const router = express.Router()
 const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
+const cloudinary=require("cloudinary").v2
+
+cloudinary.config({ 
+    cloud_name: "dsg7oitoj", 
+    api_key: "271391984486366", 
+    api_secret: "Ry6sFnb8FCX43-RxriPPyu4oOMI",
+    secure: true
+});
 
 // "use strict" mail function ****************************** */
 
@@ -86,6 +94,38 @@ const create = async (req, res, next) => {
         return res.json({ ack: 0, status: 500, message: "server error" })
     }
 }
+router.post("/edit/:id",async(req,res)=>{
+    try{
+        const files=req.files.profilePhoto;
+                const file=req.files.coverPhoto;
+                 cloudinary.uploader.upload(files.tempFilePath,(err,result)=>{
+                       // cloudinary.uploader.upload(file.tempFilePath,(err,resu)=>{
+
+                        usersModel.findOneAndUpdate(req.params.id, { $set: { profilePhoto : result.url} }, function (err) {
+                            if (err) return res.json({ "ack": 0, status: 401, message: err })
+                            return res.json({ ack: "1", status: 200, message: "User Update Successfully"})
+                        })
+                    // const dataEdit=usersModel.findByIdAndUpdate(req.params.id,{
+                    //     countryId : req.body.countryId,
+                    //     stateId : req.body.stateId,
+                    //     cityId : req.body.cityId,
+                    //     profilePhoto : result.url,
+                    //     coverPhoto : resu.url,
+                    //     commendStatus : req.body.commendStatus
+                    // });
+                    // dataEdit.save(function(data){
+                    //     if(data){
+                    //         console.log(data);
+                    //     }else{
+                    //         console.log("bll")
+                    //     }
+                    // })
+                // })
+            })
+    }catch(err){
+        res.json({ack:0, status:500, message:"Server error",error:err}) 
+    }
+})
 
 // edit ********************************************************************** /
 const update = async (req,res) => {
@@ -309,6 +349,6 @@ router.get('/online',async(req,res)=>{
 
 // all Roueters ********************************************* _*/
 router.post('/create', create)
-router.post('/edit/:id', update)
+router.post('/edits/:id', update)
 
 module.exports = router
