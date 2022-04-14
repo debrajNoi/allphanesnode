@@ -19,11 +19,10 @@ cloudinary.config({
 
 router.post("/creategallery",async(req,res)=>{
     try {
-        const fileStr = req.body.image;
+        const fileStr = req.files.image;
         // console.log(fileStr)
         const uploadResponse = await cloudinary.uploader.upload(fileStr);
         // console.log(uploadResponse.secure_url);
-        console.log(uploadResponse);
         if(uploadResponse.secure_url){
             const item=new postsModel({
                 referenceUserId : req.body.referenceUserId,
@@ -31,7 +30,6 @@ router.post("/creategallery",async(req,res)=>{
                 postImage: uploadResponse.secure_url,
                 postDescription : req.body.text
             })
-            // console.log(item);
             const itex= await item.save().then(item=>{
                 if(!item)
                     return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
@@ -67,7 +65,7 @@ router.get("/",async(req,res)=>{
         MongoClient.connect(url, function (err, db) {
                 if (err)
                     throw err
-                let dbo = db.db("myFirstDatabase")
+                let dbo = db.db("Allphanesdatabase")
                 dbo.collection('posts').aggregate([
                     {
                         $lookup: {
@@ -127,7 +125,7 @@ router.get("/",async(req,res)=>{
     }
 })
 // ************************************************************************************ */
-router.post("/creategallerys",async(req,res)=>{
+router.post("/creategallery",async(req,res)=>{
     try{
         const randvale = (Date.now())
         let imagepath = ""

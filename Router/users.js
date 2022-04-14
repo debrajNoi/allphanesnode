@@ -6,7 +6,9 @@ const usersModel = require("../Model/users")
 const router = express.Router()
 const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
-const cloudinary=require("cloudinary").v2
+const { ObjectID } = require('bson')
+const cloudinary=require("cloudinary").v2 
+
 
 cloudinary.config({ 
     cloud_name: "dsg7oitoj", 
@@ -94,38 +96,6 @@ const create = async (req, res, next) => {
         return res.json({ ack: 0, status: 500, message: "server error" })
     }
 }
-router.post("/edit/:id",async(req,res)=>{
-    try{
-        const files=req.files.profilePhoto;
-                const file=req.files.coverPhoto;
-                 cloudinary.uploader.upload(files.tempFilePath,(err,result)=>{
-                       // cloudinary.uploader.upload(file.tempFilePath,(err,resu)=>{
-
-                        usersModel.findOneAndUpdate(req.params.id, { $set: { profilePhoto : result.url} }, function (err) {
-                            if (err) return res.json({ "ack": 0, status: 401, message: err })
-                            return res.json({ ack: "1", status: 200, message: "User Update Successfully"})
-                        })
-                    // const dataEdit=usersModel.findByIdAndUpdate(req.params.id,{
-                    //     countryId : req.body.countryId,
-                    //     stateId : req.body.stateId,
-                    //     cityId : req.body.cityId,
-                    //     profilePhoto : result.url,
-                    //     coverPhoto : resu.url,
-                    //     commendStatus : req.body.commendStatus
-                    // });
-                    // dataEdit.save(function(data){
-                    //     if(data){
-                    //         console.log(data);
-                    //     }else{
-                    //         console.log("bll")
-                    //     }
-                    // })
-                // })
-            })
-    }catch(err){
-        res.json({ack:0, status:500, message:"Server error",error:err}) 
-    }
-})
 
 // edit ********************************************************************** /
 const update = async (req,res) => {
@@ -172,12 +142,26 @@ router.get('/',async(req,res)=>{
     try{
         const data = await usersModel.find()
         const response = data ?
-            res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
+            res.json({ack:"1", status:200, message:"Request Successfull",responseData : data}):
             res.json({ack:"0", status:400, message:"Allphanuser data not get"})
         return response
     }catch(err){
        res.json({ack:"0", status:500, message:"server error",error:err})
     }
+})
+router.get('/:id', async (req, res) =>{
+    try{
+        console.log('hola') 
+        console.log(req.params.id)
+        id = req.params.id
+        const data = await usersModel.findOne({_id : ObjectID(req.params.id)})
+        const response = data ?
+            res.json({ack:"1", status:200, message:"Request Successfull",responseData : data}):
+            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+        return response
+    }catch(err){
+       res.json({ack:"0", status:500, message:"server error",error:err})
+    } 
 })
 
 router.post('/members',async(req,res)=>{
@@ -347,8 +331,34 @@ router.get('/online',async(req,res)=>{
     }
 })
 
+// get online users ********************************************* _*/
+router.post("/editx",async(req,res)=>{
+    try{
+        const files=req.files.profilePhoto;
+        const coverPhoto=req.files.coverPhoto;
+        
+        const uploadResponse = await cloudinary.uploader.upload(files.tempFilePath);
+        const uploadCoverPhoto = await cloudinary.uploader.upload(coverPhoto.tempFilePath);
+
+        const response = await usersModel.findOneAndUpdate({_id:req.body.id}, 
+            { $set: 
+                { 
+                    profilePhoto : uploadResponse.secure_url,
+                    coverPhoto : uploadCoverPhoto.secure_url
+                }
+            })
+        response ?
+            res.json({ ack: "1", status: 200, message: "User Update Successfully"})
+            : res.json({ "ack": 0, status: 401, message: err })
+                        
+    }catch(err){
+        res.json({ack:0, status:500, message:"Server error",error:err}) 
+    }
+})
+
 // all Roueters ********************************************* _*/
 router.post('/create', create)
-router.post('/edits/:id', update)
+router.post('/edit/:id', update)
+
 
 module.exports = router
