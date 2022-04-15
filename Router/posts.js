@@ -65,7 +65,7 @@ router.get("/",async(req,res)=>{
         MongoClient.connect(url, function (err, db) {
                 if (err)
                     throw err
-                let dbo = db.db("Allphanesdatabase")
+                let dbo = db.db("myFirstDatabase")
                 dbo.collection('posts').aggregate([
                     {
                         $lookup: {
