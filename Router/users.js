@@ -164,7 +164,6 @@ router.get('/online',async(req,res)=>{
 })
 router.get('/:id', async (req, res) =>{
     try{
-        console.log(req.params.id)
         id = req.params.id
         const data = await usersModel.findOne({_id : ObjectID(req.params.id)})
         const response = data ?

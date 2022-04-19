@@ -59,7 +59,6 @@ router.get("/acceptrequest/:id",async(req,res)=>{
             ]).toArray(function (err, response) {
                 if (err)
                     throw err
-                console.log(response);
                 res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
                 db.close()
             })
@@ -94,7 +93,6 @@ router.get("/requests/:id",async(req,res)=>{
             ]).toArray(function (err, response) {
                 if (err)
                     throw err
-                console.log(response);
                 res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
                 db.close()
             })
@@ -129,7 +127,6 @@ router.get("/friendslist/:id",async(req,res)=>{
             ]).toArray(function (err, response) {
                 if (err)
                     throw err
-                console.log(response);
                 res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
                 db.close()
             })
@@ -163,7 +160,6 @@ router.get("/friendslista/:id",async(req,res)=>{
             ]).toArray(function (err, response) {
                 if (err)
                     throw err
-                console.log(response);
                 res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
                 db.close()
             })
@@ -184,7 +180,7 @@ router.post("/requestaccept",async(req,res)=>{
     }
 })
 
-router.delete('/request/:id', async (req, res) => {
+router.delete("/requests/:id", async (req, res) => {
     const data = await Addfriend.deleteOne({_id: req.params.id})
     data ? 
         res.json({ack:1, status:200, message:"succesfull"})

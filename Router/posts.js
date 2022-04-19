@@ -20,7 +20,6 @@ cloudinary.config({
 router.post("/creategallery",async(req,res)=>{
     try {
         const fileStr = req.files.image;
-        console.log('fileStr =>' ,fileStr)
         const uploadResponse = await cloudinary.uploader.upload(fileStr.tempFilePath);
         if(uploadResponse.secure_url){
             const item=new postsModel({
@@ -64,7 +63,7 @@ router.get("/",async(req,res)=>{
         MongoClient.connect(url, function (err, db) {
                 if (err)
                     throw err
-                let dbo = db.db("myFirstDatabase")
+                let dbo = db.db("Allphanesdatabase")
                 dbo.collection('posts').aggregate([
                     {
                         $lookup: {
@@ -104,7 +103,6 @@ router.get("/",async(req,res)=>{
                 ]).toArray(function (err, response) {
                     if (err)
                         throw err
-                    // console.log(res[0])
                     res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
                     db.close()
                 })
