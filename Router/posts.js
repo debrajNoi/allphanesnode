@@ -6,7 +6,8 @@ const usersModel=require("../Model/users")
 const router = express.Router()
 
 const MongoClient = require('mongodb').MongoClient
-const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabase' 
+// const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Allphanesdatabase' 
+const url = process.env.MONGO_URI 
 
 const cloudinary=require("cloudinary").v2 
 
