@@ -7,6 +7,7 @@ const router = express.Router()
 const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
 const { ObjectID } = require('bson')
+const users = require('../Model/users')
 const cloudinary=require("cloudinary").v2 
 
 
@@ -138,7 +139,7 @@ const update = async (req,res) => {
 }
 
 // Retrive users ********************************************************************** /
-router.get('/',async(req,res)=>{
+router.get('/hola',async(req,res)=>{
     try{
         const data = await usersModel.find()
         const response = data ?
@@ -149,10 +150,20 @@ router.get('/',async(req,res)=>{
        res.json({ack:"0", status:500, message:"server error",error:err})
     }
 })
+// get online users ********************************************* _*/
+router.get('/online',async(req,res)=>{
+    try{
+        const data = await usersModel.find({isActive: true})
+        const response = data ?
+            res.json({ack:"1", status:200, message:"Request Successfull",responseData : data}):
+            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+        return response
+    }catch(err){
+       res.json({ack:"0", status:500, message:"server error",error:err})
+    }
+})
 router.get('/:id', async (req, res) =>{
     try{
-        console.log('hola') 
-        console.log(req.params.id)
         id = req.params.id
         const data = await usersModel.findOne({_id : ObjectID(req.params.id)})
         const response = data ?
@@ -293,8 +304,6 @@ router.post("/resendotp", async(req,res) => {
         let otpExp = new Date()
         otpExp.setTime(currentDate.getTime() + (10 * 60 * 1000))
 
-        // console.log(id)
-    
         await usersModel.findOne({_id: id})
         .then(user =>{
             if(!user) return res.json({ack:"0", status:400, message:"Cannot find user"})
@@ -318,20 +327,7 @@ router.post("/resendotp", async(req,res) => {
     }
 })
 
-// get online users ********************************************* _*/
-router.get('/online',async(req,res)=>{
-    try{
-        const data = await usersModel.find({isActive : true})
-        const response = data ?
-            res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
-            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
-        return response
-    }catch(err){
-       res.json({ack:"0", status:500, message:"server error",error:err})
-    }
-})
-
-// get online users ********************************************* _*/
+// get ********************************************* _*/
 router.post("/editx",async(req,res)=>{
     try{
         const files=req.files.profilePhoto;
