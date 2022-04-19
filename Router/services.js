@@ -1,9 +1,11 @@
 const express=require("express");
 const User=require("../Model/users")
 const Addfriend=require("../Model/userFriendsMap");
+const { ObjectId } = require("mongodb");
 const router = express.Router()
 const MongoClient = require('mongodb').MongoClient
 const url =  'mongodb://127.0.0.1:27017/Allphanesdatabase'
+
 router.get("/",async(req,res)=>{
     try{
         const data=await User.find().then(item=>{
@@ -32,19 +34,16 @@ router.post("/addfriend",async(req,res)=>{
     }
 })
 
-router.get("/friendrequests",async(req,res)=>{
+router.get("/acceptrequest/:id",async(req,res)=>{
     try{
-        await Addfriend.find({"acceptorId" : "62441d7985b630275b219b0e"})
-        .then((response) =>{
-            return res.json({ack:"0", status:400, message:"success", data: response});
-        })
         MongoClient.connect(url, function (err, db) {
             if (err)
                 throw err
             let dbo = db.db("Allphanesdatabase")
+            const id=ObjectId(req.params.id)
             dbo.collection('userfriendsmaps').aggregate([
             {
-                $match:{"acceptorId" : "62441d7985b630275b219b0e"}
+                $match:{"acceptorId" :id, "isAccepted" : false}
             },
             {
                 $lookup: {
@@ -60,7 +59,110 @@ router.get("/friendrequests",async(req,res)=>{
             ]).toArray(function (err, response) {
                 if (err)
                     throw err
-                // console.log(res[0])
+                console.log(response);
+                res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
+                db.close()
+            })
+        })
+    }catch(err){
+        res.json({ack:"0", status:500, message:"server error", error:err})
+    }
+})
+
+router.get("/requests/:id",async(req,res)=>{
+    try{
+        MongoClient.connect(url, function (err, db) {
+            if (err)
+                throw err
+            let dbo = db.db("Allphanesdatabase")
+            const id=ObjectId(req.params.id)
+            dbo.collection('userfriendsmaps').aggregate([
+            {
+                $match:{"referenceUserId" :id, "isAccepted" : false}
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "acceptorId",
+                    foreignField: "_id",
+                    as: "user_info"
+                }
+            },
+            { 
+                $unwind: "$user_info" 
+            },
+            ]).toArray(function (err, response) {
+                if (err)
+                    throw err
+                console.log(response);
+                res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
+                db.close()
+            })
+        })
+    }catch(err){
+        res.json({ack:"0", status:500, message:"server error", error:err})
+    }
+})
+
+router.get("/friendslist/:id",async(req,res)=>{
+    try{
+        MongoClient.connect(url, function (err, db) {
+            if (err)
+                throw err
+            let dbo = db.db("Allphanesdatabase")
+            const id=ObjectId(req.params.id)
+            dbo.collection('userfriendsmaps').aggregate([
+            {
+                $match:{"referenceUserId" :id, "isAccepted" : true}
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "acceptorId",
+                    foreignField: "_id",
+                    as: "user_info"
+                }
+            },
+            { 
+                $unwind: "$user_info" 
+            },
+            ]).toArray(function (err, response) {
+                if (err)
+                    throw err
+                console.log(response);
+                res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
+                db.close()
+            })
+        })
+    }catch(err){
+        res.json({ack:"0", status:500, message:"server error", error:err})
+    }
+})
+router.get("/friendslista/:id",async(req,res)=>{
+    try{
+        MongoClient.connect(url, function (err, db) {
+            if (err)
+                throw err
+            let dbo = db.db("Allphanesdatabase")
+            const id=ObjectId(req.params.id)
+            dbo.collection('userfriendsmaps').aggregate([
+            {
+                $match:{"acceptorId" :id, "isAccepted" : true}
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "referenceUserId",
+                    foreignField: "_id",
+                    as: "user_info"
+                }
+            },
+            { 
+                $unwind: "$user_info" 
+            },
+            ]).toArray(function (err, response) {
+                if (err)
+                    throw err
                 console.log(response);
                 res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
                 db.close()
@@ -73,13 +175,20 @@ router.get("/friendrequests",async(req,res)=>{
 
 router.post("/requestaccept",async(req,res)=>{
     try{
-        const data=await Addfriend.updateOne({ _id: req.body.id }, { $set: { isAccepted: true } }).then(response=>{
-            if(response)return res.json({ack:1, status:200, message:"accepted",view:response.isAccepted});
-            return res.json({ack:0, status:400, message:"not accepted"});
-        })
+        const data=await Addfriend.updateOne({ _id: req.body.id }, { $set: { isAccepted: true } })
+        data ?  
+            res.json({ack:1, status:200, message:"accepted",view:data})
+            : res.json({ack:0, status:400, message:"not accepted"});
     }catch(err){
         res.json({ack:0, status:500, message:"server error",error:err});
     }
+})
+
+router.delete('/request/:id', async (req, res) => {
+    const data = await Addfriend.deleteOne({_id: req.params.id})
+    data ? 
+        res.json({ack:1, status:200, message:"succesfull"})
+        : res.json({ack:0, status:400, message:"rejected"})
 })
 
 module.exports = router

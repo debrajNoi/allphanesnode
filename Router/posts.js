@@ -20,15 +20,14 @@ cloudinary.config({
 router.post("/creategallery",async(req,res)=>{
     try {
         const fileStr = req.files.image;
-        // console.log(fileStr)
-        const uploadResponse = await cloudinary.uploader.upload(fileStr);
-        // console.log(uploadResponse.secure_url);
+        console.log('fileStr =>' ,fileStr)
+        const uploadResponse = await cloudinary.uploader.upload(fileStr.tempFilePath);
         if(uploadResponse.secure_url){
             const item=new postsModel({
                 referenceUserId : req.body.referenceUserId,
                 postTitle: req.body.title,
                 postImage: uploadResponse.secure_url,
-                postDescription : req.body.text
+                postDescription : req.body.text || ''
             })
             const itex= await item.save().then(item=>{
                 if(!item)
@@ -75,30 +74,20 @@ router.get("/",async(req,res)=>{
                             as: "user_info"
                         }
                     },
-                    // { $unwind: "$user_info" },
-                    // define some conditions here 
                     {
                         $match:{
                             $and:[{"isActive" : true}]
                         }
                     },
                     {$sort: {"createdAt": -1}},
-                    // {
-                    //     $lookup: {
-                    //         from: "userInfo",
-                    //         localField: "userId",
-                    //         foreignField: "userId",
-                    //         as: "userInfo"
-                    //     }
-                    // },
-                    // { $lookup:
-                    //   {
-                    //     from: 'users',
-                    //     localField: 'referenceUserId',
-                    //     foreignField: '_id',
-                    //     as: 'details'
-                    //   }
-                    // }
+                    {
+                        $lookup: {
+                            from: "galleries",
+                            localField: "_id",
+                            foreignField: "refPostId",
+                            as: "postInfo"
+                        }
+                    },
                     // {
                     //     $project: {
                     //         "posts._id": 1,
@@ -125,49 +114,49 @@ router.get("/",async(req,res)=>{
     }
 })
 // ************************************************************************************ */
-router.post("/creategallery",async(req,res)=>{
-    try{
-        const randvale = (Date.now())
-        let imagepath = ""
-        if (req.files != null) {
-            if (req.files.postImagePath != null) {
-               await req.files.postImagePath.mv("./gellary/image/" + randvale + '.jpg', function (err) {
-                    if (err) {
-                        res.json({ "ack": 0, status: 401, message: "photo upload fail" })
-                    }
-                })
-                imagepath = "gellary/image" + randvale + '.jpg'
-            }
-        }
+// router.post("/creategallery",async(req,res)=>{
+//     try{
+//         const randvale = (Date.now())
+//         let imagepath = ""
+//         if (req.files != null) {
+//             if (req.files.postImagePath != null) {
+//                await req.files.postImagePath.mv("./gellary/image/" + randvale + '.jpg', function (err) {
+//                     if (err) {
+//                         res.json({ "ack": 0, status: 401, message: "photo upload fail" })
+//                     }
+//                 })
+//                 imagepath = "gellary/image" + randvale + '.jpg'
+//             }
+//         }
         
-        const allphanuserdata=await postsModel.find().sort({_id:-1}).limit(1)
-        console.log(allphanuserdata)
-         const refid=[]
+//         const allphanuserdata=await postsModel.find().sort({_id:-1}).limit(1)
+//         console.log(allphanuserdata)
+//          const refid=[]
         
-        allphanuserdata.forEach(item=>{
-            // console.log('',item.id + item.createdAt)
-            const val=item.id
-            // console.log(val)
-            refid.push(val)
-        })
-        const refId=refid[0]
+//         allphanuserdata.forEach(item=>{
+//             // console.log('',item.id + item.createdAt)
+//             const val=item.id
+//             // console.log(val)
+//             refid.push(val)
+//         })
+//         const refId=refid[0]
         
-//    console.log(new mongoose.Types.ObjectId())
-        const item=new galleryModel({
-            refPostId:refId,
-            postImagePath:imagepath,
-            isactive:true,
-            isTrash:1,
-            status:true
-        })
-       await item.save().then(item=>{
-           if(!item)return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
-           return res.json({ack:"1", status:200, message:"Allphanusergellary image upload"})
-       })
-    }catch(err){
-        res.json({ack:0, status:500, message:"server error",error:err})
-    }
-})
+// //    console.log(new mongoose.Types.ObjectId())
+//         const item=new galleryModel({
+//             refPostId:refId,
+//             postImagePath:imagepath,
+//             isactive:true,
+//             isTrash:1,
+//             status:true
+//         })
+//        await item.save().then(item=>{
+//            if(!item)return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
+//            return res.json({ack:"1", status:200, message:"Allphanusergellary image upload"})
+//        })
+//     }catch(err){
+//         res.json({ack:0, status:500, message:"server error",error:err})
+//     }
+// })
 
 // router.get("/statusdelete/:id",async(req,res)=>{
 //     try{
