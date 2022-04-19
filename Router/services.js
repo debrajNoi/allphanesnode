@@ -39,7 +39,7 @@ router.get("/acceptrequest/:id",async(req,res)=>{
         MongoClient.connect(url, function (err, db) {
             if (err)
                 throw err
-            let dbo = db.db("Allphanesdatabase")
+            let dbo = db.db("myFirstDatabase")
             const id=ObjectId(req.params.id)
             dbo.collection('userfriendsmaps').aggregate([
             {
@@ -73,7 +73,7 @@ router.get("/requests/:id",async(req,res)=>{
         MongoClient.connect(url, function (err, db) {
             if (err)
                 throw err
-            let dbo = db.db("Allphanesdatabase")
+            let dbo = db.db("myFirstDatabase")
             const id=ObjectId(req.params.id)
             dbo.collection('userfriendsmaps').aggregate([
             {
@@ -107,7 +107,7 @@ router.get("/friendslist/:id",async(req,res)=>{
         MongoClient.connect(url, function (err, db) {
             if (err)
                 throw err
-            let dbo = db.db("Allphanesdatabase")
+            let dbo = db.db("myFirstDatabase")
             const id=ObjectId(req.params.id)
             dbo.collection('userfriendsmaps').aggregate([
             {
@@ -140,7 +140,7 @@ router.get("/friendslista/:id",async(req,res)=>{
         MongoClient.connect(url, function (err, db) {
             if (err)
                 throw err
-            let dbo = db.db("Allphanesdatabase")
+            let dbo = db.db("myFirstDatabase")
             const id=ObjectId(req.params.id)
             dbo.collection('userfriendsmaps').aggregate([
             {
