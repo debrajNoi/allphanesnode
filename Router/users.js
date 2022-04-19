@@ -328,23 +328,39 @@ router.post("/resendotp", async(req,res) => {
 })
 
 // get ********************************************* _*/
-router.post("/editx",async(req,res)=>{
+router.post("/profilephoto",async(req,res)=>{
     try{
-        const files=req.files.profilePhoto;
-        const coverPhoto=req.files.coverPhoto;
-        
+        const files= req.files.profilePhoto
+        // const coverPhoto=req.files.coverPhoto;
         const uploadResponse = await cloudinary.uploader.upload(files.tempFilePath);
-        const uploadCoverPhoto = await cloudinary.uploader.upload(coverPhoto.tempFilePath);
-
+        // const uploadCoverPhoto = await cloudinary.uploader.upload(coverPhoto.tempFilePath);
         const response = await usersModel.findOneAndUpdate({_id:req.body.id}, 
             { $set: 
                 { 
-                    profilePhoto : uploadResponse.secure_url,
-                    coverPhoto : uploadCoverPhoto.secure_url
+                    profilePhoto : uploadResponse.secure_url
                 }
             })
         response ?
-            res.json({ ack: "1", status: 200, message: "User Update Successfully"})
+            res.json({ ack: "1", status: 200, message: "profile photo Update Successfully"})
+            : res.json({ "ack": 0, status: 401, message: err })
+                        
+    }catch(err){
+        res.json({ack:0, status:500, message:"Server error",error:err}) 
+    }
+})
+
+router.post("/coverphoto",async(req,res)=>{
+    try{
+        const files= req.files.coverPhoto
+        const uploadResponse = await cloudinary.uploader.upload(files.tempFilePath);
+        const response = await usersModel.findOneAndUpdate({_id:req.body.id}, 
+            { $set: 
+                { 
+                    coverPhoto : uploadResponse.secure_url
+                }
+            })
+        response ?
+            res.json({ ack: "1", status: 200, message: "cover photo Update Successfully"})
             : res.json({ "ack": 0, status: 401, message: err })
                         
     }catch(err){

@@ -5,7 +5,7 @@ const posts= new Schema({
     referenceUserId : { type : mongoose.Schema.ObjectId, required : true, ref : 'users' },
     postTitle : { type : String, required : true },
     postDescription : { type : String, required : false },
-    postImage : {type: String, required : false},
+    postImage : {type : String, required : false},
     isActive : { type : Boolean, default : true},
     isTrash : { type : Boolean, default : false },
     countViews : { type : Number , default : 0 }
