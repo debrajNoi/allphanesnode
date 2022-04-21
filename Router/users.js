@@ -177,7 +177,7 @@ router.get('/:id', async (req, res) =>{
 
 router.post('/members',async(req,res)=>{
     try{
-        const data = await usersModel.find({ _id: { $ne: req.body.id } }).select(["firstName", "lastName"])       
+        const data = await usersModel.find({ _id: { $ne: req.body.id } }).select(["firstName", "lastName","profilePhoto"])       
         const response = data ?
             res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
             res.json({ack:"0", status:400, message:"Allphanuser data not get"})
