@@ -6,6 +6,7 @@ const { ObjectId } = require("mongodb");
 const router = express.Router()
 const MongoClient = require('mongodb').MongoClient
 // const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/myFirstDatabase'
+
 const url = 'mongodb+srv://allphanes:7031445611@allphanescluster.x5i5t.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 
 router.get("/",async(req,res)=>{
