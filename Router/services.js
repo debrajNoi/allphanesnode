@@ -1,11 +1,12 @@
 const express=require("express");
 const User=require("../Model/users")
 const Addfriend=require("../Model/userFriendsMap");
+const postsModel=require("../Model/posts");
 const { ObjectId } = require("mongodb");
 const router = express.Router()
 const MongoClient = require('mongodb').MongoClient
-// const url =  'mongodb://127.0.0.1:27017/myFirstDatabase'
-const url = 'mongodb+srv://allphanes:7031445611@allphanescluster.x5i5t.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+const url =  'mongodb://127.0.0.1:27017/myFirstDatabase'
+// const url = 'mongodb+srv://allphanes:7031445611@allphanescluster.x5i5t.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 
 router.get("/",async(req,res)=>{
     try{
@@ -181,11 +182,61 @@ router.post("/requestaccept",async(req,res)=>{
     }
 })
 
+router.get("/gellary/:id",async(req,res)=>{
+    try{
+       const id=ObjectId(req.params.id);
+    //    console.log(refid)
+       const gellary=await postsModel.find({referenceUserId:id});
+       if(gellary){
+           res.json({ack:1, status:200, message:"post image get",view:gellary});
+       }
+    }catch(err){
+        res.json({ack:0, status:500, message:"server error"});
+    }
+})
+
+router.get("/userprofile/:id",async(req,res)=>{
+    try{
+        MongoClient.connect(url, function (err, db) {
+            if (err)
+                throw err
+            let dbo = db.db("myFirstDatabase")
+            const id=ObjectId(req.params.id)
+            dbo.collection('posts').aggregate([
+            {
+                $match:{"referenceUserId" :id}
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "referenceUserId",
+                    foreignField: "_id",
+                    as: "user_info"
+                }
+            },
+            { 
+                $unwind: "$user_info" 
+            },
+            ]).toArray(function (err, response) {
+                if (err)
+                    throw err
+                res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
+                db.close()
+            })
+        })
+    }catch(err){
+        res.json({ack:0, status:500, message:"server error"});
+    }
+})
+
+
+
 router.delete("/requests/:id", async (req, res) => {
     const data = await Addfriend.deleteOne({_id: req.params.id})
     data ? 
         res.json({ack:1, status:200, message:"succesfull"})
         : res.json({ack:0, status:400, message:"rejected"})
 })
+
 
 module.exports = router
