@@ -5,9 +5,8 @@ const postsModel=require("../Model/posts");
 const { ObjectId } = require("mongodb");
 const router = express.Router()
 const MongoClient = require('mongodb').MongoClient
-// const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/myFirstDatabase'
-
-const url = 'mongodb+srv://allphanes:7031445611@allphanescluster.x5i5t.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+const url =  'mongodb://127.0.0.1:27017/myFirstDatabase'
+// const url = 'mongodb+srv://allphanes:7031445611@allphanescluster.x5i5t.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 
 router.get("/",async(req,res)=>{
     try{
@@ -185,8 +184,6 @@ router.post("/requestaccept",async(req,res)=>{
 
 router.get("/gellary/:id",async(req,res)=>{
     try{
-       const id=ObjectId(req.params.id);
-    //    console.log(refid)
        const gellary=await postsModel.find({referenceUserId:id});
        if(gellary){
            res.json({ack:1, status:200, message:"post image get",view:gellary});

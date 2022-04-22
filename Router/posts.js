@@ -3,12 +3,14 @@ const globalfunction = require('../global')
 const postsModel=require("../Model/posts")
 const galleryModel=require("../Model/gallery")
 const usersModel=require("../Model/users")
+const { ObjectID } = require('bson')
 const router = express.Router()
 
 const MongoClient = require('mongodb').MongoClient
-// const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/myFirstDatabase' 
+const url = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/myFirstDatabase' 
+// const url = 'mongodb+srv://allphanes:7031445611@allphanescluster.x5i5t.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 
-const url = 'mongodb+srv://allphanes:7031445611@allphanescluster.x5i5t.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+
 const cloudinary=require("cloudinary").v2 
 
 cloudinary.config({ 
@@ -17,7 +19,6 @@ cloudinary.config({
     api_secret: "Ry6sFnb8FCX43-RxriPPyu4oOMI",
     secure: true
 });
-
 
 router.post("/creategallery",async(req,res)=>{
     try {
@@ -44,8 +45,6 @@ router.post("/creategallery",async(req,res)=>{
     }
 
 })
-
-
   
 // create post************************************************************************************ */
 router.post('/create',async(req,res)=>{
@@ -111,6 +110,19 @@ router.get("/",async(req,res)=>{
                     db.close()
                 })
             })
+    }catch(err){
+        res.json({ack:"0", status:500, message:"server error", error:err})
+    }
+})
+
+router.get("/:id",async(req,res)=>{
+    try{
+        console.log('id >>', req.params.id)
+        const id = ObjectID(req.params.id)
+        const data = await postsModel.find({referenceUserId:id})
+        data ? 
+            res.json({ack:"1", status:200, message:"success", responseData:data}) 
+            : res.json({ack:"0", status:500, message:"fetch error or not found", error:err})
     }catch(err){
         res.json({ack:"0", status:500, message:"server error", error:err})
     }

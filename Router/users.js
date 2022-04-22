@@ -43,14 +43,6 @@ async function mail(info) {
 
 }
 
-// update users ********************************************* _*/
-const updateUsers = async (findObj, dataObj) =>{
-    await usersModel.findOneAndUpdate(findObj, { $set: dataObj }, function (err) {
-        if (err) return res.json({ "ack": 0, status: 401, message: err })
-        return res.json({ ack: "1", status: 200, message: "OTP send Successfully", otp: randotp})
-    })
-}
-
 // create users ********************************************* _*/
 const create = async (req, res, next) => {
     try {
@@ -162,6 +154,20 @@ router.get('/online',async(req,res)=>{
        res.json({ack:"0", status:500, message:"server error",error:err})
     }
 })
+
+router.patch('/:id', async (req, res) =>{
+    try{
+        id = req.params.id
+        const data = await usersModel.findOneAndUpdate({_id: ObjectID(id)},{$set: req.body})
+        const response = data ?
+            res.json({ack:"1", status:200, message:"Request Successfull"}):
+            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+        return response
+    }catch(err){
+       res.json({ack:"0", status:500, message:"server error",error:err})
+    } 
+})
+
 router.get('/:id', async (req, res) =>{
     try{
         id = req.params.id
@@ -208,11 +214,21 @@ router.post("/login", async (req, res) => {
         let otpExT = new Date()
         otpExT.setTime(currentDate.getTime() + (10 * 60 * 1000))
         
-        await usersModel.findOne({ email: email }).then(user => {
+        const findUser = await usersModel.findOne({ email: email })
+        if (!findUser) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
+        const matchPassword = await bcrypt.compare(password, findUser.password)
+        if (!matchPassword) return res.json({ ack: "0", status: 400, message: "Invalid Credentials" })
+        const updateActive = await usersModel.findOneAndUpdate({email: findUser.email},{$set: {"isActive" :true}})
+
+        updateActive ?
+            res.json({ ack: "1", status: 200, message: "Login Successfully", responseData : findUser})
+            : res.json({ ack: "0", status: 400, message: "invallid credential" })
+        
+        // await usersModel.findOne({ email: email }).then(user => {
             ///if user not exit
-            if (!user) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
-            const item = bcrypt.compare(password, user.password, (err, data) => {
-                if (err) throw err  
+            // if (!user) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
+            // const item = bcrypt.compare(password, user.password, (err, data) => {
+            //     if (err) throw err  
                 // if(!user.isEmailVerified){
                 //     let response
                 //     usersModel.findOneAndUpdate({email: email},{$set: {otp : hashOTP, otpExpTime : otpExT}})
@@ -222,15 +238,16 @@ router.post("/login", async (req, res) => {
                 //     //needed mail code
                 //     return response
                 // } 
-                usersModel.findOneAndUpdate({email: email},{$set: {isActive :true}})
-                    
-                const response = data ?
-                    res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
-                    : res.json({ ack: "0", status: 400, message: "invallid credential" })
+                // console.log(email)
+            //     const hola = usersModel.findOneAndUpdate({_id: user._id},{$set: {isActive :true}})
+            //     console.log(hola)
+            //     const response = data ?
+            //         res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
+            //         : res.json({ ack: "0", status: 400, message: "invallid credential" })
                 
-                return response
-            })
-        })
+            //     return response
+            // })
+        // })
 
     } catch (err) {
         res.json({ ack: "0", status: 500, message: "Server Errors", error: err })
