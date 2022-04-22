@@ -17,7 +17,7 @@ const users = new mongoose.Schema({
     stateId: { type: Number, required: false, default: ''},
     cityId: { type: Number, required: false, default: '' },
     isEmailVerified: { type: Boolean, required: false, default: false},
-    profilePhoto: { type: String, required: false, default: ''},
+    profilePhoto: { type: String, required: false, default: 'prof1'},
     coverPhoto: { type: String, required: false, default: ''},
     commendStatus: { type: String, required: false, default: ''},
     dateOfBirth: { type: Date, default: ''},

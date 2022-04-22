@@ -184,7 +184,7 @@ router.post("/requestaccept",async(req,res)=>{
 
 router.get("/gellary/:id",async(req,res)=>{
     try{
-       const gellary=await postsModel.find({referenceUserId:id});
+       const gellary=await postsModel.find({referenceUserId:id}).select("postImage");
        if(gellary){
            res.json({ack:1, status:200, message:"post image get",view:gellary});
        }
