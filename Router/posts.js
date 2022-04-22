@@ -45,31 +45,7 @@ router.post("/creategallery",async(req,res)=>{
 
 })
 
-router.post("/creategallery",async(req,res)=>{
-    try {
-        const fileStr = req.files.image;
-        const uploadResponse = await cloudinary.uploader.upload(fileStr.tempFilePath);
-        if(uploadResponse.secure_url){
-            const item=new postsModel({
-                referenceUserId : req.body.referenceUserId,
-                postTitle: req.body.title,
-                postImage: uploadResponse.secure_url,
-                postDescription : req.body.text || ''
-            })
-            const itex= await item.save().then(item=>{
-                if(!item)
-                    return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
-                    
-                return res.json({ack:"1", status:200, message:"Allphanusergellary image upload",view:item});
-            })
-        }
-        
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ err: 'Something went wrong' });
-    }
 
-})
   
 // create post************************************************************************************ */
 router.post('/create',async(req,res)=>{
