@@ -23,6 +23,7 @@
     "nodemon": "^2.0.15",
     "sha.js": "^2.4.11"
   },
+
   "devDependencies": {
     "@types/express": "^4.17.13"
   },
