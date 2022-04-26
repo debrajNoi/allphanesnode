@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const userFriendsMap = new mongoose.Schema({
-    referenceUserId : { type : mongoose.Schema.ObjectId, required : true, ref : 'user' },    
-    acceptorId : { type : mongoose.Schema.ObjectId, required : true, ref : 'user' },    
+    referenceUserId : { type : mongoose.Schema.ObjectId, required : true, ref : 'users' },    
+    acceptorId : { type : mongoose.Schema.ObjectId, required : true, ref : 'users' },    
     isAccepted : { type : Boolean, default : false }
 },
 {timestamps : true});
