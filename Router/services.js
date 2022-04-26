@@ -110,7 +110,7 @@ router.get("/friendslist/:id",async(req,res)=>{
 router.get("/friendslists/:id",async(req,res)=>{
     try{
         const id=ObjectID(req.params.id)
-        const friendList1 = await Addfriend.find({"acceptorId" :id, "isAccepted" : true}).populate("acceptorId")
+        const friendList1 = await Addfriend.find({"acceptorId" :id, "isAccepted" : true}).populate("referenceUserId")
         const friendList2 = await Addfriend.find({"referenceUserId" :id, "isAccepted" : true}).populate("acceptorId")
         res.json({ack:"1", status:200, message:"postsModel data get successfully",responseData1:friendList1,responseData2:friendList2})
     }catch(err){
