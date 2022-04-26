@@ -17,11 +17,12 @@ app.use(bodyParser.urlencoded({extended: true}))
 const usersController=require("./Router/users")
 const postsController=require("./Router/posts")
 const servicesController = require("./Router/services")
+const socialController=require("./Router/social");
 
 app.use('/api/users',usersController)
 app.use('/api/posts',postsController)
 app.use('/api/services',servicesController)
-
+app.use('/api/social',socialController)
 app.listen(PORT,function(){
     console.log("server is running")
 })

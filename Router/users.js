@@ -72,7 +72,7 @@ const create = async (req, res, next) => {
             subject: "Allphanes email Verification", // Subject line
             html: "<h2>Please verify your Email</h2><h1>"+ randotp +"</h1><p>(This code is valid for 10 minutes)</p>", // html body
         }
-        await mail(info).catch(console.error)
+        // await mail(info).catch(console.error)
 
         await usersModel.findOne({ email: email, phone : phone })
         .then(user => {
