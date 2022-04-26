@@ -43,14 +43,6 @@ async function mail(info) {
 
 }
 
-// update users ********************************************* _*/
-const updateUsers = async (findObj, dataObj) =>{
-    await usersModel.findOneAndUpdate(findObj, { $set: dataObj }, function (err) {
-        if (err) return res.json({ "ack": 0, status: 401, message: err })
-        return res.json({ ack: "1", status: 200, message: "OTP send Successfully", otp: randotp})
-    })
-}
-
 // create users ********************************************* _*/
 const create = async (req, res, next) => {
     try {
@@ -162,9 +154,22 @@ router.get('/online',async(req,res)=>{
        res.json({ack:"0", status:500, message:"server error",error:err})
     }
 })
+
+router.patch('/:id', async (req, res) =>{
+    try{
+        id = req.params.id
+        const data = await usersModel.findOneAndUpdate({_id: ObjectID(id)},{$set: req.body})
+        const response = data ?
+            res.json({ack:"1", status:200, message:"Request Successfull"}):
+            res.json({ack:"0", status:400, message:"Allphanuser data not get"})
+        return response
+    }catch(err){
+       res.json({ack:"0", status:500, message:"server error",error:err})
+    } 
+})
+
 router.get('/:id', async (req, res) =>{
     try{
-        console.log(req.params.id)
         id = req.params.id
         const data = await usersModel.findOne({_id : ObjectID(req.params.id)})
         const response = data ?
@@ -178,7 +183,7 @@ router.get('/:id', async (req, res) =>{
 
 router.post('/members',async(req,res)=>{
     try{
-        const data = await usersModel.find({ _id: { $ne: req.body.id } }).select(["firstName", "lastName"])       
+        const data = await usersModel.find({ _id: { $ne: req.body.id } }).select(["firstName", "lastName","profilePhoto"])       
         const response = data ?
             res.json({ack:"1", status:200, message:"Request Successfull",data : data}):
             res.json({ack:"0", status:400, message:"Allphanuser data not get"})
@@ -209,11 +214,21 @@ router.post("/login", async (req, res) => {
         let otpExT = new Date()
         otpExT.setTime(currentDate.getTime() + (10 * 60 * 1000))
         
-        await usersModel.findOne({ email: email }).then(user => {
+        const findUser = await usersModel.findOne({ email: email })
+        if (!findUser) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
+        const matchPassword = await bcrypt.compare(password, findUser.password)
+        if (!matchPassword) return res.json({ ack: "0", status: 400, message: "Invalid Credentials" })
+        const updateActive = await usersModel.findOneAndUpdate({email: findUser.email},{$set: {"isActive" :true}})
+
+        updateActive ?
+            res.json({ ack: "1", status: 200, message: "Login Successfully", responseData : findUser})
+            : res.json({ ack: "0", status: 400, message: "invallid credential" })
+        
+        // await usersModel.findOne({ email: email }).then(user => {
             ///if user not exit
-            if (!user) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
-            const item = bcrypt.compare(password, user.password, (err, data) => {
-                if (err) throw err  
+            // if (!user) return res.json({ ack: "0", status: 400, message: "User Not Exist" })
+            // const item = bcrypt.compare(password, user.password, (err, data) => {
+            //     if (err) throw err  
                 // if(!user.isEmailVerified){
                 //     let response
                 //     usersModel.findOneAndUpdate({email: email},{$set: {otp : hashOTP, otpExpTime : otpExT}})
@@ -223,15 +238,16 @@ router.post("/login", async (req, res) => {
                 //     //needed mail code
                 //     return response
                 // } 
-                usersModel.findOneAndUpdate({email: email},{$set: {isActive :true}})
-                    
-                const response = data ?
-                    res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
-                    : res.json({ ack: "0", status: 400, message: "invallid credential" })
+                // console.log(email)
+            //     const hola = usersModel.findOneAndUpdate({_id: user._id},{$set: {isActive :true}})
+            //     console.log(hola)
+            //     const response = data ?
+            //         res.json({ ack: "1", status: 200, message: "Login Successfully", id: user._id, isVerified: user.isEmailVerified, otp : randotp, hashOTP : hashOTP })
+            //         : res.json({ ack: "0", status: 400, message: "invallid credential" })
                 
-                return response
-            })
-        })
+            //     return response
+            // })
+        // })
 
     } catch (err) {
         res.json({ ack: "0", status: 500, message: "Server Errors", error: err })
@@ -329,23 +345,39 @@ router.post("/resendotp", async(req,res) => {
 })
 
 // get ********************************************* _*/
-router.post("/editx",async(req,res)=>{
+router.post("/profilephoto",async(req,res)=>{
     try{
-        const files=req.files.profilePhoto;
-        const coverPhoto=req.files.coverPhoto;
-        
+        const files= req.files.profilePhoto
+        // const coverPhoto=req.files.coverPhoto;
         const uploadResponse = await cloudinary.uploader.upload(files.tempFilePath);
-        const uploadCoverPhoto = await cloudinary.uploader.upload(coverPhoto.tempFilePath);
-
+        // const uploadCoverPhoto = await cloudinary.uploader.upload(coverPhoto.tempFilePath);
         const response = await usersModel.findOneAndUpdate({_id:req.body.id}, 
             { $set: 
                 { 
-                    profilePhoto : uploadResponse.secure_url,
-                    coverPhoto : uploadCoverPhoto.secure_url
+                    profilePhoto : uploadResponse.secure_url
                 }
             })
         response ?
-            res.json({ ack: "1", status: 200, message: "User Update Successfully"})
+            res.json({ ack: "1", status: 200, message: "profile photo Update Successfully"})
+            : res.json({ "ack": 0, status: 401, message: err })
+                        
+    }catch(err){
+        res.json({ack:0, status:500, message:"Server error",error:err}) 
+    }
+})
+
+router.post("/coverphoto",async(req,res)=>{
+    try{
+        const files= req.files.coverPhoto
+        const uploadResponse = await cloudinary.uploader.upload(files.tempFilePath);
+        const response = await usersModel.findOneAndUpdate({_id:req.body.id}, 
+            { $set: 
+                { 
+                    coverPhoto : uploadResponse.secure_url
+                }
+            })
+        response ?
+            res.json({ ack: "1", status: 200, message: "cover photo Update Successfully"})
             : res.json({ "ack": 0, status: 401, message: err })
                         
     }catch(err){
