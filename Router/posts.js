@@ -45,6 +45,40 @@ router.post("/creategallery",async(req,res)=>{
     }
 
 }) 
+
+// router.post("/creategallery",async(req,res)=>{
+//     try {
+//         const fileStr = req.files.image;
+//         const uploadResponse = await cloudinary.uploader.upload(fileStr.tempFilePath);
+//         if(uploadResponse.secure_url){
+//             const item=new postsModel({
+//                 referenceUserId : req.body.referenceUserId,
+//                 postTitle: req.body.title,
+//                 // postImage: uploadResponse.secure_url,
+//                 postDescription : req.body.text
+//             })
+//             const insertPost = await item.save()
+//             if(insertPost){
+//                 const dataG = new galleryModel({
+//                     refPostId : item._id,    
+//                     postImagePath : uploadResponse.secure_url
+//                 })
+
+//                 const insertG = dataG.save()
+//                 if(dataG){
+//                     res.status(200).json({ message: 'success' });
+//                 }
+//             }
+//         }else{
+//             res.status(500).json({ message: 'image not uploaded' });
+//         }
+        
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ err: 'Something went wrong' });
+//     }
+
+// })
   
 // create post************************************************************************************ */
 router.post('/create',async(req,res)=>{
@@ -90,19 +124,6 @@ router.get("/",async(req,res)=>{
                             as: "postInfo"
                         }
                     },
-                    // {
-                    //     $project: {
-                    //         "posts._id": 1,
-                    //         "postTitle": 1,
-                    //         "postDescription" : 1,
-                    //         "imagePath" : 1,
-                    //         "createdAt" : 1,
-                    //         "user_info.firstName": 1,
-                    //         "user_info.lastName": 1,
-                    //         // "userInfo._id":0
-                    //     }
-                    // }
-                    
                 ]).toArray(function (err, response) {
                     if (err)
                         throw err

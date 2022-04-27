@@ -33,13 +33,13 @@ router.post("/comments",async(req,res)=>{
 router.get("/viewcomment",async(req,res)=>{
     try{
         
-        const data=await comment.find().populate("referenceUserId"). then((response)=>{
-            if(response){
-                return res.json({ack:1, status:200, message:"comment view",view:response});
-            }else{
-                return res.json({ack:0, status:400, message:"not view"});
-            }
-        })
+        const data=await comment.find().populate("referenceUserId")
+        if(data){
+            return res.json({ack:1, status:200, message:"comment view",view:response});
+        }else{
+            return res.json({ack:0, status:400, message:"not view"});
+        }
+    
     }catch(err){
         res.json({ack:0, status:500, message:"server error",error:err});
     }
@@ -62,12 +62,12 @@ router.get("/commentcount",async(req,res)=>{
 
 router.post("/replaycomments",async(req,res)=>{
     try{
-     const data=new replaycomment({
-        commentId:req.body.commentId,
-        referenceUserId:req.body.referenceUserId,
-        messageText:req.body.messageText
-     });
-     await data.save().then((response)=>{
+        const data=new replaycomment({
+            commentId:req.body.commentId,
+            referenceUserId:req.body.referenceUserId,
+            messageText:req.body.messageText
+        });
+        data.save().then((response)=>{
          if(response){
              res.json({ack:1, status:200, message:"replaycomment insert success"});
          }else{
@@ -82,10 +82,10 @@ router.post("/replaycomments",async(req,res)=>{
 router.get("/countreplycmd",async(req,res)=>{
     try{
         const id=ObjectId("62667240d7a2667583ad9a9e")
-      const data=await replaycomment.countDocuments({commentId:id}).then(response=>{
-          if(response){
-              res.json({ack:1, status:200, message:"count replaycomment",view:response});
-          }
+        const data=await replaycomment.countDocuments({commentId:id}).then(response=>{
+        if(response){
+            res.json({ack:1, status:200, message:"count replaycomment",view:response});
+        }
       })
     }catch(err){
         res.json({ack:0, status:500, message:"server error",error:err});
@@ -153,7 +153,7 @@ router.post("/addfriend",async(req,res)=>{
 router.get("/acceptrequest/:id",async(req,res)=>{
     try{
         const id = ObjectID(req.params.id)
-        const data = await Addfriend.find({"acceptorId" :id, "isAccepted" : false}).populate("acceptorId")
+        const data = await Addfriend.find({"acceptorId" :id, "isAccepted" : false}).populate("referenceUserId")
         res.json({ack:"1", status:200, message:"postsModel data get successfully",responseData:data})
     }catch(err){
         res.json({ack:"0", status:500, message:"server error", error:err})
