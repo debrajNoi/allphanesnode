@@ -24,61 +24,47 @@ router.post("/creategallery",async(req,res)=>{
     try {
         const fileStr = req.files.image;
         const uploadResponse = await cloudinary.uploader.upload(fileStr.tempFilePath);
+        console.log(uploadResponse)
         if(uploadResponse.secure_url){
             const item=new postsModel({
                 referenceUserId : req.body.referenceUserId,
                 postTitle: req.body.title,
-                postImage: uploadResponse.secure_url,
-                postDescription : req.body.text || ''
+                postDescription : req.body.text
             })
-            const itex= await item.save().then(item=>{
-                if(!item)
-                    return res.json({ack:"0", status:500, message:"Allphanusergellary not insert image"})
-                    
-                return res.json({ack:"1", status:200, message:"Allphanusergellary image upload",view:item});
-            })
+            const insert= await item.save()
+            if(insert){
+                const dataGallery = new galleryModel({
+                    referenceUserId : req.body.referenceUserId,
+                    referencePostId : insert._id,    
+                    postImagePath : uploadResponse.secure_url,
+                })
+                const insertG = await dataGallery.save()
+                if(insertG)
+                    res.status(200).json({ responseData: 'success' })
+            } else{
+                res.status(400).json({ err: 'Something went wrong' })
+            }
         }
         
     } catch (err) {
-        console.error(err);
+        // console.error(err);
         res.status(500).json({ err: 'Something went wrong' });
     }
 
-}) 
+})
 
-// router.post("/creategallery",async(req,res)=>{
-//     try {
-//         const fileStr = req.files.image;
-//         const uploadResponse = await cloudinary.uploader.upload(fileStr.tempFilePath);
-//         if(uploadResponse.secure_url){
-//             const item=new postsModel({
-//                 referenceUserId : req.body.referenceUserId,
-//                 postTitle: req.body.title,
-//                 // postImage: uploadResponse.secure_url,
-//                 postDescription : req.body.text
-//             })
-//             const insertPost = await item.save()
-//             if(insertPost){
-//                 const dataG = new galleryModel({
-//                     refPostId : item._id,    
-//                     postImagePath : uploadResponse.secure_url
-//                 })
-
-//                 const insertG = dataG.save()
-//                 if(dataG){
-//                     res.status(200).json({ message: 'success' });
-//                 }
-//             }
-//         }else{
-//             res.status(500).json({ message: 'image not uploaded' });
-//         }
-        
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ err: 'Something went wrong' });
-//     }
-
-// })
+router.get("/gellary/:id",async(req,res)=>{
+    try{
+        const id = ObjectID(req.params.id)
+       const gellary=await galleryModel.find({refUserId:id});
+       if(gellary){
+           res.json({ack:1, status:200, message:"post image get",view:gellary});
+       }
+    
+    }catch(err){
+        res.json({ack:0, status:500, message:"server error"});
+    }
+})
   
 // create post************************************************************************************ */
 router.post('/create',async(req,res)=>{
@@ -95,36 +81,124 @@ router.post('/create',async(req,res)=>{
 })
 
 // /get all post  ************************************** /
-router.get("/",async(req,res)=>{
+// router.get("/",async(req,res)=>{
+//     try{
+//         MongoClient.connect(url, function (err, db) {
+//                 if (err)
+//                     throw err
+//                 let dbo = db.db("myFirstDatabase")
+//                 dbo.collection('posts').aggregate([
+//                     {
+//                         $lookup: {
+//                             from: "users",
+//                             localField: "referenceUserId",
+//                             foreignField: "_id",
+//                             as: "user_info"
+//                         }
+//                     },
+//                     {
+//                         $match:{
+//                             $and:[{"isActive" : true}]
+//                         }
+//                     },
+//                     {$sort: {"createdAt": -1}},
+//                     {
+//                         $lookup: {
+//                             from: "galleries",
+//                             localField: "_id",
+//                             foreignField: "refPostId",
+//                             as: "postInfo"
+//                         }
+//                     },
+// ]).toArray(function (err, response) {
+//     if (err)
+//         throw err
+//     res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
+//     db.close()
+// })
+// })
+// }catch(err){
+// res.json({ack:"0", status:500, message:"server error", error:err})
+// }
+// })
+router.get("/:id",async(req,res)=>{
     try{
+        const ParamId = ObjectID(req.params.id)
         MongoClient.connect(url, function (err, db) {
                 if (err)
                     throw err
                 let dbo = db.db("myFirstDatabase")
+
                 dbo.collection('posts').aggregate([
+                    
+                    // {
+                    //     $match:{_id:ObjectID("626a642c879622e56e5ea271")}
+                    // },
                     {
-                        $lookup: {
-                            from: "users",
-                            localField: "referenceUserId",
-                            foreignField: "_id",
-                            as: "user_info"
-                        }
+                         $lookup :{
+                            from : 'likes',
+                            localField:'_id',
+                            foreignField : 'referencePostId',
+                            as :'user_likes'
+                        },
+                    },{$project:{
+                        referenceUserId:1,
+                        postTitle:1,
+                        postDescription : 1,
+                        postImage : 1,
+                        isActive : 1,
+                        isTrash : 1,
+                        countViews : 1,
+                        user_likes:1,
+                        totalLikes : {
+                           $sum : {
+                                $map:{
+                                "input":'$user_likes',
+                                'as' : 'user_likes1',
+                                'in':{$cond :[{$eq:["$$user_likes1.isLike",true]},1,0]}
+                               }
+                            }
+                          }
+                        }      
                     },
-                    {
-                        $match:{
-                            $and:[{"isActive" : true}]
+                    {$addFields:{
+                       
+                        isLiked : {
+                            
+                                $filter: {
+                                            input: '$user_likes',
+                                            as: 'user_likes',
+                                            cond: { 
+                                                $and :[
+                                                {$eq: ['$$user_likes.referenceUserId', ParamId]},
+                                                {$eq: ['$$user_likes.isLike',true]}]
+                                                }
+                                        }
                         }
+                      }
+                  },
+                   
+                    {
+                        $lookup :{
+                            from : 'users',
+                            localField:'referenceUserId',
+                            foreignField : '_id',
+                            as :'user_info'
+                        },
+                    
                     },
                     {$sort: {"createdAt": -1}},
                     {
                         $lookup: {
                             from: "galleries",
                             localField: "_id",
-                            foreignField: "refPostId",
+                            foreignField: "referencePostId",
                             as: "postInfo"
                         }
-                    },
-                ]).toArray(function (err, response) {
+                    }
+                    
+                ])
+                .toArray(function (err, response) {
                     if (err)
                         throw err
                     res.json({ack:"1", status:200, message:"postsModel data get successfully",view:response})
@@ -135,6 +209,7 @@ router.get("/",async(req,res)=>{
         res.json({ack:"0", status:500, message:"server error", error:err})
     }
 })
+                
 
 router.get("/:id",async(req,res)=>{
     try{
